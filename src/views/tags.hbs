@@ -1,0 +1,257 @@
+<div class="d-flex justify-content-between align-items-center bg-dark text-light p-3">
+    <h1>{{title}}</h1>
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#agregarCategoriaModal">
+        Agregar Categoría
+    </button>
+</div>
+
+<table class="table table-dark table-striped">
+    <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Categoría</th>
+            <th scope="col">Subcategoría</th>
+            <th scope="col">Descripción</th>
+            <th scope="col">Imagen</th>
+            <th scope="col">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each etiquetas}}
+        <tr>
+            <th scope="row">{{@index}}</th>
+            <td>{{this.category}}</td>
+            <td>{{this.subcategory}}</td>
+            <td>{{this.description}}</td>
+            <td><img src="{{this.image}}" alt="{{this.subcategory}}" style="width: 50px;"></td>
+            <td>
+                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#agregarSubcategoriaModal"
+                    onclick="setCategoriaId('{{this.category}}')">Agregar Subcategoría</button>
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
+                    onclick="setSubcategoriaId('{{this.category}}', '{{this.subcategory}}')">Eliminar</button>
+            </td>
+        </tr>
+        {{else}}
+        <tr>
+            <td colspan="6" class="text-center">No hay etiquetas disponibles.</td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>
+
+<!-- Modal para agregar categoría -->
+<div class="modal fade" id="agregarCategoriaModal" tabindex="-1" aria-labelledby="agregarCategoriaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title" id="agregarCategoriaModalLabel">Agregar Nueva Categoría</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="agregarCategoriaForm">
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Categoría</label>
+                        <input type="text" class="form-control" id="category" name="category" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Agregar Categoría</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar subcategoría -->
+<div class="modal fade" id="agregarSubcategoriaModal" tabindex="-1" aria-labelledby="agregarSubcategoriaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title" id="agregarSubcategoriaModalLabel">Agregar Subcategoría</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="agregarSubcategoriaForm">
+                    <input type="hidden" id="categoriaId" name="categoriaId">
+                    <div class="mb-3">
+                        <label for="subcategoria" class="form-label">Nombre de la Subcategoría</label>
+                        <input type="text" class="form-control" id="subcategoria" name="subcategoria" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcion" name="descripcion" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="imagen" class="form-label">Subir Imagen</label>
+                        <input type="file" class="form-control" id="imagen" name="imagen" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Agregar Subcategoría</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar subcategoría -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas eliminar esta subcategoría?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteButton">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="module">
+
+    // Hacer que la función sea global
+    window.setCategoriaId = function (categoriaId) {
+        console.log('Categoria ID:', categoriaId);
+        document.getElementById('categoriaId').value = categoriaId;
+    };
+
+    // Asignar el evento al botón
+    document.querySelectorAll('button[data-categoria]').forEach(button => {
+        button.addEventListener('click', function () {
+            const categoria = this.getAttribute('data-categoria');
+            setCategoriaId(categoria);
+        });
+    });
+
+    document.getElementById('agregarCategoriaForm').addEventListener('submit', async function (e) {
+        e.preventDefault(); // Prevenir el comportamiento por defecto del formulario
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+        try {
+            const response = await fetch('/etiquetas/add-category', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+            if (response.ok) {
+                // Si la categoría se agregó correctamente, cierra el modal y actualiza la vista
+                $('#agregarCategoriaModal').modal('hide');
+                location.reload(); // Recarga la página para mostrar la nueva categoría
+            } else {
+                alert('Error al agregar la categoría.');
+            }
+        } catch (error) {
+            console.error('Error: ', error);
+        }
+    });
+
+    import { ref, uploadBytes, getDownloadURL,deleteObject } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
+
+    document.getElementById('agregarSubcategoriaForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const categoriaId = formData.get('categoriaId');
+        const subcategoria = formData.get('subcategoria');
+        const descripcion = formData.get('descripcion');
+        const imagenFile = formData.get('imagen'); // Archivo de imagen
+
+        if (!imagenFile) {
+            alert('Debe seleccionar una imagen.');
+            return;
+        }
+
+        try {
+              // Cambia el nombre del archivo a subcategoria para que coincida con el nombre de la subcategoría
+            const storageRef = ref(window.firebaseStorage, `images/category/${categoriaId}/${subcategoria}.jpg`); // Puedes cambiar la extensión según el tipo de imagen        
+            const snapshot = await uploadBytes(storageRef, imagenFile);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+
+            const response = await fetch('/etiquetas/add-subcategory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    categoriaId,
+                    subcategoria,
+                    descripcion,
+                    imagen: downloadURL, // La URL de descarga de la imagen
+                }),
+            });
+
+            if (response.ok) {
+                $('#agregarSubcategoriaModal').modal('hide');
+                location.reload(); // Recargar para mostrar los cambios
+            } else {
+                alert('Error al agregar la subcategoría.');
+            }
+        } catch (error) {
+            console.error('Error subiendo la imagen: ', error);
+            alert('Error al subir la imagen.');
+        }
+    });
+// Variables para almacenar el ID de la categoría y subcategoría a eliminar
+let categoryIdToDelete = null;
+let subcategoryIdToDelete = null;
+
+// Función para establecer los IDs de categoría y subcategoría a eliminar
+window.setSubcategoriaId = function(categoryId, subcategoryId) {
+    categoryIdToDelete = categoryId; // ID de la categoría (ej. 'construccion')
+    subcategoryIdToDelete = subcategoryId; // ID de la subcategoría (ej. 'carpinteria')
+};
+
+// Evento para manejar el clic en el botón de eliminar
+document.getElementById('confirmDeleteButton').addEventListener('click', async function() {
+
+    
+    if (subcategoryIdToDelete && categoryIdToDelete) {
+
+        const imagePath = `images/category/${categoryIdToDelete}/${subcategoryIdToDelete}.jpg`; // Ajusta la extensión según sea necesario
+         const imageRef = ref(window.firebaseStorage, imagePath);
+
+        try {
+             await deleteObject(imageRef);
+
+            const response = await fetch(`/etiquetas/delete-subcategory/${categoryIdToDelete}/${subcategoryIdToDelete}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                
+                $('#confirmDeleteModal').modal('hide');
+                location.reload(); // Recargar para mostrar los cambios
+            } else {
+                alert('Error al eliminar la subcategoría.');
+            }
+        } catch (error) {
+            console.error('Error al eliminar la subcategoría: ', error);
+            alert('Error al eliminar la subcategoría.');
+        }
+    }
+});
+
+
+
+
+
+
+</script>
