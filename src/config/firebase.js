@@ -14,7 +14,11 @@ admin.initializeApp({
 
 const db= getFirestore();
 const auth = getAuth();
+
+
 getAuth().generateSignInWithEmailLink
+
+
 module.exports={
     db,auth
 };

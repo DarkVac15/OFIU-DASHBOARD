@@ -23,8 +23,9 @@ app.use(express.urlencoded({ extended: true }));  // Cambiado extend a extended
 // Usa las rutas, especificando un path base para cada una
 app.use('/', require("./routes/index"));  // Rutas generales como login y registro
 app.use('/etiquetas', require('./routes/tags'));  // Rutas para etiquetas
-
 app.use('/dashboard', require('./routes/dashboard'));  // Rutas para etiquetas
+app.use('/api', require('./routes/api'));  //
+
 // Carpeta de archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 

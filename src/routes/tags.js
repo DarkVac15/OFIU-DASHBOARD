@@ -6,6 +6,21 @@ const FieldValue = require('firebase-admin').firestore.FieldValue;
 
 const router = express.Router();
    
+router.get('/test-firestore', async (req, res) => {
+    try {
+      const snapshot = await db.collection('tickets').get();
+      const data = [];
+  
+      snapshot.forEach(doc => {
+        data.push({ id: doc.id, ...doc.data() }); // Guarda los datos en un array
+      });
+  
+      res.status(200).json(data); // Devuelve los datos en formato JSON
+    } catch (error) {
+      console.error("Error al acceder a Firestore:", error);
+      res.status(500).json({ error: 'Error al acceder a Firestore' });
+    }
+  });
 
     router.get('/', async (req, res) => {
         try {         
