@@ -1,0 +1,13 @@
+<div class="row">
+    {{#each metrics}}
+        <div class="col-md-4 mb-4">
+            <div class="card text-white bg-dark">
+                <div class="card-body">
+                    <h5 class="card-title">{{this.title_card}}</h5>
+                    <p class="card-text">{{this.value}}</p>
+                    <p class="card-text"><small >{{this.description}}</small></p>
+                </div>
+            </div>
+        </div>
+    {{/each}}
+</div>

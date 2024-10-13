@@ -1,0 +1,25 @@
+
+
+
+
+
+
+<body class="bg-dark text-light">
+    <header>
+        {{> datarange}} <!-- Incluyendo el partial de rango de fechas -->
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>Métricas</h2>
+            {{> cards-metrics metrics=metrics}} <!-- Incluyendo el partial de tarjetas -->
+        </div>
+    </main>
+
+    <footer>
+      
+{{> footer}}
+    </footer>
+
+    <script src="/js/daterange.js"></script>
+    </body>
