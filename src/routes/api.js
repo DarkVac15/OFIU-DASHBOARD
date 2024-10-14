@@ -55,17 +55,14 @@ router.post('/tags_jobs', async (req, res) => {
             .split(',')
             .map(etiqueta => etiqueta.trim());
 
-        console.log("Etiquetas sugeridas:", etiquetasSugeridas);
+     
 
         // Actualizar el documento en Firestore con las etiquetas sugeridas
         await db.collection('tickets').doc(docId).update({
             tags: etiquetasSugeridas
         });
 
-        res.json({
-            message: 'Etiquetas sugeridas guardadas con éxito',
-            etiquetas_sugeridas: etiquetasSugeridas
-        });
+        res.send("OK");
 
     } catch (error) {
         console.error("Error al procesar la solicitud:", error);
