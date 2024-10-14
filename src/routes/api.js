@@ -34,8 +34,7 @@ router.post('/tags_jobs', async (req, res) => {
         }
 
         const descripcion = doc.data().description;
-        console.log(descripcion);
-
+       
         // Inicializar la API de Google Generative AI
         const genAI = new GoogleGenerativeAI(process.env.API_KEY);
         const model = await genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -45,10 +44,10 @@ router.post('/tags_jobs', async (req, res) => {
         Dada la siguiente descripción: "${descripcion}", y esta lista de etiquetas: [${subcategories.join(', ')}], selecciona solo las etiquetas más relevantes para la descripción, separadas por coma. Si no encuentras ninguna relación, coloca "Sin etiqueta"`;
 
         // Llamada a la API para generar contenido
+    
         const result = await model.generateContent(prompt);
-        
-        // Asegúrate de que el resultado devuelva la estructura correcta
-        const responseText = result?.text || "Sin etiqueta"; 
+      
+        const responseText = result.response.candidates[0]?.content.parts[0]?.text || "Sin etiqueta";
 
         // Limpiar y formatear las etiquetas sugeridas
         const etiquetasSugeridas = responseText
