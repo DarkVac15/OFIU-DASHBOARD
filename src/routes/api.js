@@ -29,8 +29,8 @@ router.post('/tags_jobs', async (req, res) => {
         // Obtener el ticket del ID proporcionado
         const doc = await db.collection('tickets').doc(docId).get();
         if (!doc.exists) {
-            console.error("Documento no encontrado para el ID:", docId);
-            return res.status(404).json({ error: 'Documento no encontrado' });
+            
+            return res.status(404).send( 'Documento no encontrado');
         }
 
         const descripcion = doc.data().description;
@@ -54,9 +54,6 @@ router.post('/tags_jobs', async (req, res) => {
             .trim() 
             .split(',')
             .map(etiqueta => etiqueta.trim());
-
-     
-
         // Actualizar el documento en Firestore con las etiquetas sugeridas
         await db.collection('tickets').doc(docId).update({
             tags: etiquetasSugeridas
@@ -65,8 +62,8 @@ router.post('/tags_jobs', async (req, res) => {
         res.send("OK");
 
     } catch (error) {
-        console.error("Error al procesar la solicitud:", error);
-        res.status(500).json({ error: 'Error al procesar la solicitud' });
+        
+        res.status(500).send("Error")
     }
 });
 
