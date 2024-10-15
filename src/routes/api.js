@@ -6,7 +6,7 @@ require('dotenv').config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 router.post('/tags_jobs', async (req, res) => {
-    const docId = req.query.id;
+    const docId = req.body.id;
     console.log(docId);
     if (!docId) {
         return res.status(400).json({ error: 'ID del documento no proporcionado' });
