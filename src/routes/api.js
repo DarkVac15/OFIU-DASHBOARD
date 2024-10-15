@@ -7,7 +7,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 router.post('/tags_jobs', async (req, res) => {
     const docId = req.query.id;
-    
+    console.log(docId);
     if (!docId) {
         return res.status(400).json({ error: 'ID del documento no proporcionado' });
     }
@@ -63,7 +63,8 @@ router.post('/tags_jobs', async (req, res) => {
 
     } catch (error) {
         
-        res.status(500).send("Error")
+        res.status(500).send("Error");
+        console.log(error)
     }
 });
 
