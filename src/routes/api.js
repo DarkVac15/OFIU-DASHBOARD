@@ -30,7 +30,7 @@ router.post('/tags_jobs', async (req, res) => {
         const doc = await db.collection('tickets').doc(docId).get();
         if (!doc.exists) {
             
-            return res.status(404).send( 'Documento no encontrado');
+            return res.status(404).json({ error: 'Documento no encontrado' });
         }
 
         const descripcion = doc.data().description;
@@ -59,12 +59,13 @@ router.post('/tags_jobs', async (req, res) => {
             tags: etiquetasSugeridas
         });
 
-        res.send("OK");
+        res.json({ message: "OK" });
 
     } catch (error) {
         
-        res.status(500).send("Error");
-        console.log(error)
+        res.status(500).json({ error: "Error interno del servidor", details: error.message });
+       
+        
     }
 });
 
