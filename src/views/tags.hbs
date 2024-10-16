@@ -40,7 +40,8 @@
 </table>
 
 <!-- Modal para agregar categoría -->
-<div class="modal fade" id="agregarCategoriaModal" tabindex="-1" aria-labelledby="agregarCategoriaModalLabel" aria-hidden="true">
+<div class="modal fade" id="agregarCategoriaModal" tabindex="-1" aria-labelledby="agregarCategoriaModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content bg-dark text-light">
             <div class="modal-header">
@@ -53,6 +54,10 @@
                         <label for="category" class="form-label">Categoría</label>
                         <input type="text" class="form-control" id="category" name="category" required>
                     </div>
+                    <div class="mb-3">
+                        <label for="imagen" class="form-label">Subir Imagen</label>
+                        <input type="file" class="form-control" id="imagen" name="imagenCategoria" required>
+                    </div>
                     <button type="submit" class="btn btn-success">Agregar Categoría</button>
                 </form>
             </div>
@@ -61,7 +66,8 @@
 </div>
 
 <!-- Modal para agregar subcategoría -->
-<div class="modal fade" id="agregarSubcategoriaModal" tabindex="-1" aria-labelledby="agregarSubcategoriaModalLabel" aria-hidden="true">
+<div class="modal fade" id="agregarSubcategoriaModal" tabindex="-1" aria-labelledby="agregarSubcategoriaModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content bg-dark text-light">
             <div class="modal-header">
@@ -91,7 +97,8 @@
 </div>
 
 <!-- Modal de confirmación para eliminar subcategoría -->
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content bg-dark text-light">
             <div class="modal-header">
@@ -121,7 +128,7 @@
 
 
 <script type="module">
-
+    import { ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
     // Hacer que la función sea global
     window.setCategoriaId = function (categoriaId) {
         console.log('Categoria ID:', categoriaId);
@@ -136,11 +143,29 @@
         });
     });
 
+
+
     document.getElementById('agregarCategoriaForm').addEventListener('submit', async function (e) {
         e.preventDefault(); // Prevenir el comportamiento por defecto del formulario
-        const formData = new FormData(this);
-        const data = Object.fromEntries(formData);
+    const formData = new FormData(this);
+        const nombreCategoria = formData.get('category');
+        const imagenCategoriaFile = formData.get('imagenCategoria'); // Archivo de imagen de la categoría
+
+        if (!imagenCategoriaFile) {
+            alert('Debe seleccionar una imagen para la categoría.');
+            return;
+        }
+
         try {
+            // Cambia el nombre del archivo a nombreCategoria para que coincida con el nombre de la categoría
+
+            const storageRef = ref(window.firebaseStorage, `images/category/${nombreCategoria}/${nombreCategoria}.jpg`); // Puedes cambiar la extensión según el tipo de imagen        
+            const snapshot = await uploadBytes(storageRef, imagenCategoriaFile);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+            const data = {
+                category: nombreCategoria,
+                imagen: downloadURL, // La URL de descarga de la imagen
+            };
             const response = await fetch('/etiquetas/add-category', {
                 method: 'POST',
                 headers: {
@@ -160,7 +185,7 @@
         }
     });
 
-    import { ref, uploadBytes, getDownloadURL,deleteObject } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
+
 
     document.getElementById('agregarSubcategoriaForm').addEventListener('submit', async function (e) {
         e.preventDefault();
@@ -177,7 +202,7 @@
         }
 
         try {
-              // Cambia el nombre del archivo a subcategoria para que coincida con el nombre de la subcategoría
+            // Cambia el nombre del archivo a subcategoria para que coincida con el nombre de la subcategoría
             const storageRef = ref(window.firebaseStorage, `images/category/${categoriaId}/${subcategoria}.jpg`); // Puedes cambiar la extensión según el tipo de imagen        
             const snapshot = await uploadBytes(storageRef, imagenFile);
             const downloadURL = await getDownloadURL(snapshot.ref);
@@ -206,48 +231,48 @@
             alert('Error al subir la imagen.');
         }
     });
-// Variables para almacenar el ID de la categoría y subcategoría a eliminar
-let categoryIdToDelete = null;
-let subcategoryIdToDelete = null;
+    // Variables para almacenar el ID de la categoría y subcategoría a eliminar
+    let categoryIdToDelete = null;
+    let subcategoryIdToDelete = null;
 
-// Función para establecer los IDs de categoría y subcategoría a eliminar
-window.setSubcategoriaId = function(categoryId, subcategoryId) {
-    categoryIdToDelete = categoryId; // ID de la categoría (ej. 'construccion')
-    subcategoryIdToDelete = subcategoryId; // ID de la subcategoría (ej. 'carpinteria')
-};
+    // Función para establecer los IDs de categoría y subcategoría a eliminar
+    window.setSubcategoriaId = function (categoryId, subcategoryId) {
+        categoryIdToDelete = categoryId; // ID de la categoría (ej. 'construccion')
+        subcategoryIdToDelete = subcategoryId; // ID de la subcategoría (ej. 'carpinteria')
+    };
 
-// Evento para manejar el clic en el botón de eliminar
-document.getElementById('confirmDeleteButton').addEventListener('click', async function() {
+    // Evento para manejar el clic en el botón de eliminar
+    document.getElementById('confirmDeleteButton').addEventListener('click', async function () {
 
-    
-    if (subcategoryIdToDelete && categoryIdToDelete) {
 
-        const imagePath = `images/category/${categoryIdToDelete}/${subcategoryIdToDelete}.jpg`; // Ajusta la extensión según sea necesario
-         const imageRef = ref(window.firebaseStorage, imagePath);
+        if (subcategoryIdToDelete && categoryIdToDelete) {
 
-        try {
-             await deleteObject(imageRef);
+            const imagePath = `images/category/${categoryIdToDelete}/${subcategoryIdToDelete}.jpg`; // Ajusta la extensión según sea necesario
+            const imageRef = ref(window.firebaseStorage, imagePath);
 
-            const response = await fetch(`/etiquetas/delete-subcategory/${categoryIdToDelete}/${subcategoryIdToDelete}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+            try {
+                await deleteObject(imageRef);
 
-            if (response.ok) {
-                
-                $('#confirmDeleteModal').modal('hide');
-                location.reload(); // Recargar para mostrar los cambios
-            } else {
+                const response = await fetch(`/etiquetas/delete-subcategory/${categoryIdToDelete}/${subcategoryIdToDelete}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+
+                    $('#confirmDeleteModal').modal('hide');
+                    location.reload(); // Recargar para mostrar los cambios
+                } else {
+                    alert('Error al eliminar la subcategoría.');
+                }
+            } catch (error) {
+                console.error('Error al eliminar la subcategoría: ', error);
                 alert('Error al eliminar la subcategoría.');
             }
-        } catch (error) {
-            console.error('Error al eliminar la subcategoría: ', error);
-            alert('Error al eliminar la subcategoría.');
         }
-    }
-});
+    });
 
 
 
