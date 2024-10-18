@@ -71,13 +71,14 @@ router.get('/test-firestore', async (req, res) => {
 
 
    router.post('/add-category', async (req, res) => {
-    const { category, } = req.body;
+    const { category, image} = req.body;
 
     try {
         // Crea un nuevo documento con el ID igual a la categoría
         await db.collection('category').doc(category).set({
             // Puedes agregar otros campos si es necesario, por ejemplo:
             // Campo de ejemplo
+            image: image 
         });
 
         res.status(201).send('Categoría agregada'); // Responde con un estado 201
