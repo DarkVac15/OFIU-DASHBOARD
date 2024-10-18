@@ -45,7 +45,7 @@ router.get('/test-firestore', async (req, res) => {
                             category: doc.id, // Nombre de la categoría (nombre del documento)
                             subcategory: key, // Nombre de la subcategoría
                             description: value.desc, // Descripción de la subcategoría
-                            image: value.img // Imagen de la subcategoría
+                            image: value.image // Imagen de la subcategoría
                         });
                     }
                 }
@@ -89,8 +89,8 @@ router.get('/test-firestore', async (req, res) => {
 
 
 router.post('/add-subcategory',  async (req, res) => {
-    const { categoriaId, subcategoria, descripcion,imagen } = req.body;
-    if (!categoriaId || !subcategoria || !descripcion || !imagen ) {
+    const { categoriaId, subcategoria, descripcion,image } = req.body;
+    if (!categoriaId || !subcategoria || !descripcion || !image ) {
         return res.status(400).send('Todos los campos son requeridos');
     }
    try {
@@ -98,7 +98,7 @@ router.post('/add-subcategory',  async (req, res) => {
         await categoryDoc.set({
             [subcategoria]: {
                 desc: descripcion,
-                image: imagen
+                image: image
             }
         }, { merge: true });  // Utiliza merge para no sobrescribir otros datos del documento
 
