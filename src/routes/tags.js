@@ -98,7 +98,7 @@ router.post('/add-subcategory',  async (req, res) => {
         await categoryDoc.set({
             [subcategoria]: {
                 desc: descripcion,
-                img: imagen
+                image: imagen
             }
         }, { merge: true });  // Utiliza merge para no sobrescribir otros datos del documento
 
