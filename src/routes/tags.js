@@ -50,7 +50,7 @@ router.get('/test-firestore', async (req, res) => {
                     }
                 }
     
-                // Si no hay subcategorías, agrega la categoría como vacía
+                // Si naaao hay subcategorías, agrega la categoría como vacía
                 if (!hasSubcategories) {
                     etiquetas.push({
                         category: doc.id, // Nombre de la categoría
