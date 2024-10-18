@@ -164,7 +164,7 @@
             const downloadURL = await getDownloadURL(snapshot.ref);
             const data = {
                 category: nombreCategoria,
-                imagen: downloadURL, // La URL de descarga de la imagen
+                image: downloadURL, // La URL de descarga de la imagen
             };
             const response = await fetch('/etiquetas/add-category', {
                 method: 'POST',

@@ -97,7 +97,7 @@ router.get('/', async (req, res) => {
             title_card: 'Tickets Creados',
             value: totalTickets,
             description: startDate && endDate ? `Tickets creados del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Total de tickets creados'
-        },
+        }
     ];
 
     // Pasar los datos a la vista
