@@ -4,8 +4,16 @@
             <div class="card text-white bg-dark">
                 <div class="card-body">
                     <h5 class="card-title">{{this.title_card}}</h5>
-                    <p class="card-text">{{this.value}}</p>
-                    <p class="card-text"><small >{{this.description}}</small></p>
+                    
+                    {{#if this.isHtml}}
+                        <!-- Renderiza HTML sin escapar -->
+                        <p class="card-text">{{{this.value}}}</p>
+                    {{else}}
+                        <!-- Renderiza el valor como texto normal -->
+                        <p class="card-text">{{this.value}}</p>
+                    {{/if}}
+                    
+                    <p class="card-text"><small>{{this.description}}</small></p>
                 </div>
             </div>
         </div>

@@ -3,6 +3,8 @@ const morgan = require('morgan');
 const path = require('path');
 const exphs = require("express-handlebars");
 const app = express();
+const checkApiKey = require('./middleware/api');
+
 
 // Configuración de vistas
 app.set("views", path.join(__dirname, "views"));
@@ -22,9 +24,10 @@ app.use(express.urlencoded({ extended: true }));  // Cambiado extend a extended
 
 // Usa las rutas, especificando un path base para cada una
 app.use('/', require("./routes/index"));  // Rutas generales como login y registro
+
 app.use('/etiquetas', require('./routes/tags'));  // Rutas para etiquetas
-app.use('/dashboard', require('./routes/dashboard'));  // Rutas para etiquetas
-app.use('/api', require('./routes/api'));  //
+app.use('/dashboard',  require('./routes/dashboard'));  // Rutas para etiquetas
+app.use('/api',checkApiKey, require('./routes/api'));  //
 
 // Carpeta de archivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));

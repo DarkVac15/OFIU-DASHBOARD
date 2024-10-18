@@ -1,18 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/auth');
+
 
 router.get('/', (req, res) => {
+  const message = req.query.message || null;
     res.render('landing', { layout: 'main',  showNavbar: false  }); /// buscar la clases dashnboard para la dsash
 
   });
 
   router.use(express.json());
 
-// Ruta para el login y verificar el token
-router.post('/login', async (req, res) => {
- 
-});
 
 
 

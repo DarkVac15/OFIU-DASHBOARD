@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { db } = require("../config/firebase"); // Solo usas `db`, eliminé `auth` para evitar redundancias
-const checkApiKey = require('../middleware/api');
+
 require('dotenv').config();
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-router.post('/tags_jobs',checkApiKey, async (req, res) => {
+router.post('/tags_jobs', async (req, res) => {
     const docId = req.body.id;
     console.log(docId);
     if (!docId) {

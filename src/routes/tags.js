@@ -1,3 +1,10 @@
+//
+//card de tickets creados
+//ticktes conectaods por campo de estado
+//
+//
+//
+//
 
 const { db, auth } = require("../config/firebase");
 const express = require('express');
