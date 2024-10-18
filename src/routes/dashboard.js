@@ -1,23 +1,12 @@
 const express = require('express');
 const router = express.Router();
-
 const { db, auth } = require("../config/firebase");
-//
-//card de tickets creados
-//ticktes conectaods por campo de estado
-//
-//
 
 // Ruta para mostrar el dashboard, protegida con el middleware de autenticación
+
 router.get('/', async (req, res) => {
     const startDate = req.query.startDate ? new Date(req.query.startDate) : null;
     const endDate = req.query.endDate ? new Date(req.query.endDate) : null;
-
-    let totalUsers = 0;
-    let totalProfessionals = 0;
-    let subcategoryCount = {};
-    let categoryCount = {};
-    let stateCount = {};
 
     if (endDate) {
         endDate.setHours(23, 59, 59, 999); // Incluir todo el día completo
@@ -29,99 +18,70 @@ router.get('/', async (req, res) => {
         usersQuery = usersQuery.where('createdAt', '>=', startDate).where('createdAt', '<=', endDate);
     }
 
-    const usersSnapshot = await usersQuery.get(); // Ejecutamos la consulta de usuarios
+    const usersSnapshot = await usersQuery.get();
+    const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
 
-    for (const userDoc of usersSnapshot.docs) {
-        totalUsers++; // Contamos cada usuario dentro del rango
+    // Variables para conteo
+    let totalUsers = usersData.length;
+    let totalProfessionals = 0;
+    let subcategoryCount = {};
+    let categoryCount = {};
+    let stateCount = {};
+    let cityCount = {};
 
-        // Verificar si el usuario tiene datos de profesional
-        const professionalSnapshot = await db.collection('users')
-            .doc(userDoc.id)
-            .collection('professionalData')
-            .doc('data') // Documento de datos profesionales
-            .get();
+    // Obtener datos de profesionales
+    const professionalPromises = usersData.map(async user => {
+        const professionalSnapshot = await db.collection('users').doc(user.id).collection('professionalData').doc('data').get();
+        return professionalSnapshot.exists ? professionalSnapshot.data() : null;
+    });
 
-        if (professionalSnapshot.exists) {
-            const professionalData = professionalSnapshot.data();
-            const professionalCreatedAt = professionalData.createdAt; // Fecha de creación del profesional
+    const professionals = await Promise.all(professionalPromises);
 
-            // Filtrar por rango de fechas solo si están establecidos
+    // Procesar los datos de los profesionales
+    professionals.forEach(professionalData => {
+        if (professionalData) {
+            const professionalCreatedAt = professionalData.createdAt;
+            const city = professionalData.city;
+
+            // Filtrar por rango de fechas
             if ((!startDate && !endDate) || (professionalCreatedAt && professionalCreatedAt.toDate() >= startDate && professionalCreatedAt.toDate() <= endDate)) {
-                totalProfessionals++; // Contar profesionales dentro del rango
+                totalProfessionals++;
 
-                // Contar las subcategorías
-                const subcategories = professionalData.skills || [];
-                subcategories.forEach(skills => {
-                    if (subcategoryCount[skills]) {
-                        subcategoryCount[skills]++;
-                    } else {
-                        subcategoryCount[skills] = 1;
-                    }
+                // Contar subcategorías
+                (professionalData.skills || []).forEach(skill => {
+                    subcategoryCount[skill] = (subcategoryCount[skill] || 0) + 1;
                 });
+
+                // Contar profesionales en la ciudad
+                if (city) {
+                    cityCount[city] = (cityCount[city] || 0) + 1;
+                }
             }
         }
-    }
-
-    // Crear una lista HTML con las subcategorías
-    let subcategorySummary = '<ul>';
-    Object.keys(subcategoryCount).forEach(skills => {
-        subcategorySummary += `<li>${skills}: ${subcategoryCount[skills]}</li>`;
     });
-    subcategorySummary += '</ul>'; // Cerrar la lista
 
     // Consulta de tickets (filtrada por fechas si existen)
     let ticketsQuery = db.collection('tickets');
-
     if (startDate && endDate) {
         ticketsQuery = ticketsQuery.where('createdAt', '>=', startDate).where('createdAt', '<=', endDate);
     }
 
-    const ticketsSnapshot = await ticketsQuery.get(); // Ejecutamos la consulta de tickets
+    const ticketsSnapshot = await ticketsQuery.get();
+    const totalTickets = ticketsSnapshot.size;
 
-    const totalTickets = ticketsSnapshot.size; // Total de tickets dentro del rango
-
-    // Contar las categorías más solicitadas (en el campo 'tags' que es un array)
-    for (const ticketDoc of ticketsSnapshot.docs) {
+    // Contar categorías y estados
+    ticketsSnapshot.docs.forEach(ticketDoc => {
         const ticketData = ticketDoc.data();
 
-        const tags = ticketData.tags || [];
-        tags.forEach(tag => {
-            if (categoryCount[tag]) {
-                categoryCount[tag]++;
-            } else {
-                categoryCount[tag] = 1;
-            }
+        (ticketData.tags || []).forEach(tag => {
+            categoryCount[tag] = (categoryCount[tag] || 0) + 1;
         });
 
-        const state = ticketData.state; // Obtener el estado del ticket
-        if (stateCount[state]) {
-            stateCount[state]++;
-        } else {
-            stateCount[state] = 1;
-        }
-
-
-    }
-    let sortedCategories = Object.entries(categoryCount)
-        .sort(([, countA], [, countB]) => countB - countA); // Ordenar por el conteo en orden descendente
-
-    // Crear una lista HTML con las categorías más solicitadas
-    let categorySummary = '<ul>';
-    sortedCategories.forEach(([tag, count]) => {
-        categorySummary += `<li>${tag}: ${count}</li>`;
+        const state = ticketData.state;
+        stateCount[state] = (stateCount[state] || 0) + 1;
     });
-    categorySummary += '</ul>'; // Cerrar la lista
 
-
-    // Crear una lista HTML con los estados de los tickets
-    let stateSummary = '<ul>';
-    Object.entries(stateCount).forEach(([state, count]) => {
-        stateSummary += `<li>${state}: ${count}</li>`;
-    });
-    stateSummary += '</ul>'; // Cerrar la lista
-
-
-    // Preparar las métricas para las tarjetas
+    // Preparar métricas para las tarjetas
     const metrics = [
         {
             title_card: 'Usuarios Registrados',
@@ -134,41 +94,30 @@ router.get('/', async (req, res) => {
             description: startDate && endDate ? `Profesionales registrados del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Profesionales totales registrados'
         },
         {
-            title_card: 'Subcategorías Profesionales',
-            value: subcategorySummary, // Mostrar la lista HTML
-            description: startDate && endDate ? `Subcategorías del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Total de subcategorías de profesionales',
-            isHtml: true // Indicar que el contenido es HTML
-        },
-        {
             title_card: 'Tickets Creados',
             value: totalTickets,
             description: startDate && endDate ? `Tickets creados del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Total de tickets creados'
         },
-       
-        {
-            title_card: 'Categorías Más Solicitadas en Tickets',
-            value: categorySummary, // Mostrar la lista HTML
-            description: startDate && endDate ? `Categorías solicitadas del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Total de categorías solicitadas en tickets',
-            isHtml: true // Indicar que el contenido es HTML
-        },
-        { 
-            title_card: 'Estado de Tickets', 
-            value: stateSummary, // Mostrar la lista HTML
-            description: startDate && endDate ? `Estados de tickets del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Total de estados de tickets',
-            isHtml: true // Indicar que el contenido es HTML
-        }
     ];
 
+    // Pasar los datos a la vista
     res.render('dashboard', {
         metrics,
         layout: 'main',
         showNavbar: true,
         startDate: startDate ? startDate.toISOString().split('T')[0] : null,
-        endDate: endDate ? endDate.toISOString().split('T')[0] : null
+        endDate: endDate ? endDate.toISOString().split('T')[0] : null,
+        barChartLabels: JSON.stringify(Object.keys(stateCount)),
+        barChartData: JSON.stringify(Object.values(stateCount)),
+        categoryChartLabels: JSON.stringify(Object.keys(categoryCount)),
+        categoryChartData: JSON.stringify(Object.values(categoryCount)),
+        subcategoryChartLabels: JSON.stringify(Object.keys(subcategoryCount)),
+        subcategoryChartData: JSON.stringify(Object.values(subcategoryCount)),
+        cityChartLabels: JSON.stringify(Object.keys(cityCount)),
+        cityChartData: JSON.stringify(Object.values(cityCount))
     });
 });
 
 
 
 module.exports = router;
-// layout: 'main', showNavbar: true 
