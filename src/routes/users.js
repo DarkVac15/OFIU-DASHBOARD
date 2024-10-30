@@ -41,6 +41,7 @@ router.get('/', async (req, res) => {
 // Ruta para habilitar usuario
 // Ejemplo de controlador
 router.post('/toggle-user-status', userController.toggleUserStatus);
+
 router.post('/toggle-user-status1',userController.toggleUserStatus, async (req, res) => {
     const { uid, action } = req.body;
 

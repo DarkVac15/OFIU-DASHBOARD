@@ -23,8 +23,7 @@
             <td>{{this.metadata.creationTime}}</td>
             <td>
                 <button class="btn {{#if this.disabled}}btn-success{{else}}btn-danger{{/if}}" data-bs-toggle="modal"
-                    data-bs-target="#confirmInhabiliarModal" data-uid="{{this.uid}}" 
-                    data-email="{{this.email}}"
+                    data-bs-target="#confirmInhabiliarModal" data-uid="{{this.uid}}" data-email="{{this.email}}" data-name="{{this.displayName}}"
                     data-action="{{#if this.disabled}}enable{{else}}disable{{/if}}">
                     {{#if this.disabled}}Habilitar{{else}}Inhabilitar{{/if}}
 
@@ -52,6 +51,13 @@
             <div class="modal-body">
                 ¿Estás seguro de que deseas {{#if this.disabled}}habilitar{{else}}inhabilitar{{/if}} este usuario?
             </div>
+            <div class="mt-3">
+                <label for="motivoInhabilitacion" class="form-label">Motivo de Inhabilitación:</label>
+                <textarea id="motivoInhabilitacion" class="form-control" rows="3"
+                    placeholder="Escribe el motivo aquí"></textarea>
+            </div>
+
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-danger" id="confirmInhabiliarButton">
@@ -70,8 +76,9 @@
         button.addEventListener('click', function () {
             selectedUid = this.getAttribute('data-uid');
             action = this.getAttribute('data-action');
-            const email = this.getAttribute('data-email'); 
-            
+            const email = this.getAttribute('data-email');
+            const name = this.getAttribute('data-name');
+
             const modalTitle = document.getElementById('confirmInhabiliarModalLabel');
             const modalBody = document.querySelector('.modal-body');
             const confirmButton = document.getElementById('confirmInhabiliarButton'); // Asegúrate de que esto esté dentro de la función
@@ -96,12 +103,13 @@
         try {
             // Obtén el email desde el botón de confirmación usando el uid seleccionado
             const email = document.querySelector(`[data-uid="${selectedUid}"]`).getAttribute('data-email');
-
+            const name = document.querySelector(`[data-uid="${selectedUid}"]`).getAttribute('data-name');
+            const motivo = document.getElementById('motivoInhabilitacion').value;
             // Llama a la ruta de toggleUserStatus
             const response = await fetch('/user/toggle-user-status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ uid: selectedUid, action, email }) // Aquí pasas el uid, la acción y el email
+                body: JSON.stringify({ uid: selectedUid, action, email,motivo,name }) // Aquí pasas el uid, la acción y el email
             });
 
             if (response.ok) {
