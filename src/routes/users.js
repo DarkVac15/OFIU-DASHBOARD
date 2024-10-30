@@ -1,6 +1,7 @@
-const cookieParser = require("cookie-parser");
+
 const { db, auth } = require("../config/firebase");
 const express = require('express');
+const userController = require('../controller/mailController');
 const router = express.Router();
 
 router.get('/', async (req, res) => {
@@ -38,43 +39,27 @@ router.get('/', async (req, res) => {
 });
 
 // Ruta para habilitar usuario
-router.post('/enable-user', async (req, res) => {
-    const { uid } = req.body;
-
-    if (!uid) {
-        return res.status(400).json({ message: 'UID es requerido' });
-    }
+// Ejemplo de controlador
+router.post('/toggle-user-status', userController.toggleUserStatus);
+router.post('/toggle-user-status1',userController.toggleUserStatus, async (req, res) => {
+    const { uid, action } = req.body;
 
     try {
-        // Actualiza el estado del usuario a habilitado
-        await auth.updateUser(uid, { disabled: false });
-        res.status(200).json({ message: `Usuario con UID: ${uid} ha sido habilitado` });
+        // Habilitar o inhabilitar el usuario según la acción
+        if (action === 'enable') {
+            await auth.updateUser(uid, { disabled: false });
+            // Envía correo aquí
+        } else {
+            await auth.updateUser(uid, { disabled: true });
+            // Envía correo aquí
+        }
+        res.status(200).send({ message: 'Usuario actualizado correctamente.' });
     } catch (error) {
-        console.error('Error al habilitar usuario:', error);
-        res.status(500).json({ message: 'Error al habilitar usuario', error });
+        console.error('Error al actualizar el usuario:', error);
+        res.status(500).send({ error: 'Error al actualizar el usuario.' });
     }
 });
 
 
-
-
-router.post('/disable-user', async (req, res) => {
-    const { uid } = req.body; // Se espera que el UID venga en el cuerpo de la solicitud
-
-    if (!uid) {
-        return res.status(400).json({ message: 'UID es requerido' });
-    }
-
-    try {
-        // Actualiza el estado del usuario a inhabilitado
-        await auth.updateUser(uid, { disabled: true });
-        res.status(200).json({ message: `Usuario con UID: ${uid} ha sido inhabilitado` });
-
-    } catch (error) {
-
-        console.error('Error al inhabilitar usuario:', error);
-        res.status(500).json({ message: 'Error al inhabilitar usuario', error });
-    }
-});
 
 module.exports = router; 

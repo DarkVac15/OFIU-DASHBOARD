@@ -23,9 +23,11 @@
             <td>{{this.metadata.creationTime}}</td>
             <td>
                 <button class="btn {{#if this.disabled}}btn-success{{else}}btn-danger{{/if}}" data-bs-toggle="modal"
-                    data-bs-target="#confirmInhabiliarModal" data-uid="{{this.uid}}"
+                    data-bs-target="#confirmInhabiliarModal" data-uid="{{this.uid}}" 
+                    data-email="{{this.email}}"
                     data-action="{{#if this.disabled}}enable{{else}}disable{{/if}}">
                     {{#if this.disabled}}Habilitar{{else}}Inhabilitar{{/if}}
+
                 </button>
             </td>
         </tr>
@@ -68,6 +70,8 @@
         button.addEventListener('click', function () {
             selectedUid = this.getAttribute('data-uid');
             action = this.getAttribute('data-action');
+            const email = this.getAttribute('data-email'); 
+            
             const modalTitle = document.getElementById('confirmInhabiliarModalLabel');
             const modalBody = document.querySelector('.modal-body');
             const confirmButton = document.getElementById('confirmInhabiliarButton'); // Asegúrate de que esto esté dentro de la función
@@ -85,20 +89,24 @@
                 confirmButton.classList.remove('btn-success');
                 confirmButton.classList.add('btn-danger'); // Cambiar a botón de peligro
             }
+            confirmButton.setAttribute('data-email', email);
         });
     });
-
     document.getElementById('confirmInhabiliarButton').addEventListener('click', async function () {
         try {
-            const response = await fetch('/user/' + (action === 'enable' ? 'enable-user' : 'disable-user'), {
+            // Obtén el email desde el botón de confirmación usando el uid seleccionado
+            const email = document.querySelector(`[data-uid="${selectedUid}"]`).getAttribute('data-email');
+
+            // Llama a la ruta de toggleUserStatus
+            const response = await fetch('/user/toggle-user-status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ uid: selectedUid })
+                body: JSON.stringify({ uid: selectedUid, action, email }) // Aquí pasas el uid, la acción y el email
             });
 
             if (response.ok) {
                 console.log(`Usuario ${selectedUid} ha sido ${action === 'enable' ? 'habilitado' : 'inhabilitado'} con éxito`);
-                location.reload();
+                location.reload(); // Recarga la página para ver el cambio
             } else {
                 console.error('Error al modificar el usuario');
             }
@@ -106,4 +114,6 @@
             console.error('Error en la solicitud:', error);
         }
     });
+
+
 </script>
