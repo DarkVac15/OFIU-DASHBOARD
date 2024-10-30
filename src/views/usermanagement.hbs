@@ -1,0 +1,109 @@
+<table class="table table-dark table-striped">
+    <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Nombre</th>
+            <th scope="col">Email</th>
+            <th scope="col">Email verificado</th>
+            <th scope="col">Proveedor de autenticación</th>
+            <th scope="col">Inhabilitado</th>
+            <th scope="col">Fecha creación</th>
+            <th scope="col">Acción</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each usersList}}
+        <tr>
+            <th scope="row">{{@index}}</th>
+            <td>{{this.displayName}}</td>
+            <td>{{this.email}}</td>
+            <td>{{this.emailVerified}}</td>
+            <td>{{this.providerData}}</td>
+            <td>{{this.disabled}}</td>
+            <td>{{this.metadata.creationTime}}</td>
+            <td>
+                <button class="btn {{#if this.disabled}}btn-success{{else}}btn-danger{{/if}}" data-bs-toggle="modal"
+                    data-bs-target="#confirmInhabiliarModal" data-uid="{{this.uid}}"
+                    data-action="{{#if this.disabled}}enable{{else}}disable{{/if}}">
+                    {{#if this.disabled}}Habilitar{{else}}Inhabilitar{{/if}}
+                </button>
+            </td>
+        </tr>
+        {{else}}
+        <tr>
+            <td colspan="6" class="text-center">No hay usuarios disponibles.</td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>
+
+<!-- Modal de confirmación -->
+<div class="modal fade" id="confirmInhabiliarModal" tabindex="-1" aria-labelledby="confirmInhabiliarModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmInhabiliarModalLabel">Confirmar {{#if
+                    this.disabled}}Habilitación{{else}}Inhabilitación{{/if}}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas {{#if this.disabled}}habilitar{{else}}inhabilitar{{/if}} este usuario?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmInhabiliarButton">
+                    Inhabilitar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    let selectedUid;
+    let action;
+
+    document.querySelectorAll('[data-bs-toggle="modal"]').forEach(button => {
+        button.addEventListener('click', function () {
+            selectedUid = this.getAttribute('data-uid');
+            action = this.getAttribute('data-action');
+            const modalTitle = document.getElementById('confirmInhabiliarModalLabel');
+            const modalBody = document.querySelector('.modal-body');
+            const confirmButton = document.getElementById('confirmInhabiliarButton'); // Asegúrate de que esto esté dentro de la función
+
+            if (action === 'enable') {
+                modalTitle.innerText = 'Confirmar Habilitación';
+                modalBody.innerText = '¿Estás seguro de que deseas habilitar este usuario?';
+                confirmButton.innerText = 'Habilitar';
+                confirmButton.classList.remove('btn-danger');
+                confirmButton.classList.add('btn-success'); // Cambiar a botón de éxito
+            } else {
+                modalTitle.innerText = 'Confirmar Inhabilitación';
+                modalBody.innerText = '¿Estás seguro de que deseas inhabilitar este usuario?';
+                confirmButton.innerText = 'Inhabilitar';
+                confirmButton.classList.remove('btn-success');
+                confirmButton.classList.add('btn-danger'); // Cambiar a botón de peligro
+            }
+        });
+    });
+
+    document.getElementById('confirmInhabiliarButton').addEventListener('click', async function () {
+        try {
+            const response = await fetch('/user/' + (action === 'enable' ? 'enable-user' : 'disable-user'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ uid: selectedUid })
+            });
+
+            if (response.ok) {
+                console.log(`Usuario ${selectedUid} ha sido ${action === 'enable' ? 'habilitado' : 'inhabilitado'} con éxito`);
+                location.reload();
+            } else {
+                console.error('Error al modificar el usuario');
+            }
+        } catch (error) {
+            console.error('Error en la solicitud:', error);
+        }
+    });
+</script>

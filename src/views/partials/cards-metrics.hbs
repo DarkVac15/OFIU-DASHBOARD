@@ -22,12 +22,12 @@
 
 <div class="row">
     <div class="col-md-4 text-white bg-dark">
-        <h2>Cantidad de Tickets por Estado</h2>
+        <h2> Estado de los tickets </h2>
         <canvas id="barChart" width="400" height="200"></canvas>
     </div>
 
     <div class="col-md-4 text-white bg-dark">
-        <h2>Cantidad de Tickets por Etiqueta</h2>
+        <h2> Tickets por Etiqueta</h2>
         <canvas id="categoryChart" width="400" height="200"></canvas>
     </div>
 
@@ -36,7 +36,7 @@
         <canvas id="subcategoryChart" width="400" height="200"></canvas>
     </div>
      <div class="col-md-4 text-white bg-dark">
-       <h2>Cantidad de Profesionales por Ciudad</h2>
+       <h2> Profesionales por Ciudad</h2>
         <canvas id="cityChart" width="400" height="200"></canvas>
     </div>
 </div>
@@ -86,7 +86,6 @@
 
 const categoryLabels = JSON.parse('{{{ categoryChartLabels }}}');
 const categoryData = JSON.parse('{{{ categoryChartData }}}');
-
     // Configurar el gráfico de barras de categorías
     const ctxCategory = document.getElementById('categoryChart').getContext('2d');
     const categoryChart = new Chart(ctxCategory, {
