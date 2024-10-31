@@ -5,7 +5,9 @@ const { db, auth } = require("../config/firebase");
 
 router.get('/', (req, res) => {
   const message = req.query.message || null;
-  res.render('landing', { layout: 'main', showNavbar: false }); /// buscar la clases dashnboard para la dsash
+
+  res.render('landing', { layout: 'main', showNavbar: false, errorMessage: message }); // Envía el mensaje a la vista
+
 
 });
 
@@ -37,7 +39,7 @@ router.post('/logout', (req, res) => {
 
 
 router.get('/set-admin', async (req, res) => {
-  const uid  ="9fKtiZmpQEb7B05sK73E3Xlhls83" ;
+  const uid = "9fKtiZmpQEb7B05sK73E3Xlhls83";
 
   if (!uid) {
     return res.status(400).json({ message: 'UID es requerido' });

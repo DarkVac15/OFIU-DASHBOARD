@@ -5,8 +5,8 @@ const { db, auth } = require("../config/firebase");
 
 // Ruta para mostrar el dashboard, protegida con el middleware de autenticación
 
+// Asegúrate de que Firebase Admin esté inicializado
 router.get('/', async (req, res) => {
-
     const startDate = req.query.startDate ? new Date(req.query.startDate) : null;
     const endDate = req.query.endDate ? new Date(req.query.endDate) : null;
 
@@ -14,7 +14,15 @@ router.get('/', async (req, res) => {
         endDate.setHours(23, 59, 59, 999); // Incluir todo el día completo
     }
 
-    // Consulta de usuarios (filtrada por fechas si existen)
+    // Obtener las categorías desde Firestore
+    const tagsSnapshot = await db.collection('tags').get();
+    const tagToCategory = {};
+
+    tagsSnapshot.forEach(doc => {
+        const data = doc.data();
+        // tagToCategory[doc.id] = data.titlesubcategory; // Asumiendo que el nombre del documento es la etiqueta y `titlesubcategory` es la categoría
+    });
+
     let usersQuery = db.collection('users');
     if (startDate && endDate) {
         usersQuery = usersQuery.where('createdAt', '>=', startDate).where('createdAt', '<=', endDate);
@@ -23,38 +31,30 @@ router.get('/', async (req, res) => {
     const usersSnapshot = await usersQuery.get();
     const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
 
-    // Variables para conteo
     let totalUsers = usersData.length;
     let totalProfessionals = 0;
     let subcategoryCount = {};
     let categoryCount = {};
     let stateCount = {};
     let cityCount = {};
+    let totalTickets = 0;
 
-    // Obtener datos de profesionales
+    // Contar profesionales
     const professionalPromises = usersData.map(async user => {
         const professionalSnapshot = await db.collection('users').doc(user.id).collection('professionalData').doc('data').get();
         return professionalSnapshot.exists ? professionalSnapshot.data() : null;
     });
-
     const professionals = await Promise.all(professionalPromises);
 
-    // Procesar los datos de los profesionales
     professionals.forEach(professionalData => {
         if (professionalData) {
             const professionalCreatedAt = professionalData.createdAt;
             const city = professionalData.city;
-
-            // Filtrar por rango de fechas
             if ((!startDate && !endDate) || (professionalCreatedAt && professionalCreatedAt.toDate() >= startDate && professionalCreatedAt.toDate() <= endDate)) {
                 totalProfessionals++;
-
-                // Contar subcategorías
                 (professionalData.skills || []).forEach(skill => {
                     subcategoryCount[skill] = (subcategoryCount[skill] || 0) + 1;
                 });
-
-                // Contar profesionales en la ciudad
                 if (city) {
                     cityCount[city] = (cityCount[city] || 0) + 1;
                 }
@@ -62,28 +62,79 @@ router.get('/', async (req, res) => {
         }
     });
 
-    // Consulta de tickets (filtrada por fechas si existen)
-    let ticketsQuery = db.collection('tickets');
-    if (startDate && endDate) {
-        ticketsQuery = ticketsQuery.where('createdAt', '>=', startDate).where('createdAt', '<=', endDate);
-    }
+    const categoriesSnapshot = await db.collection('category').get();
+    const categories = categoriesSnapshot.docs;
 
-    const ticketsSnapshot = await ticketsQuery.get();
-    const totalTickets = ticketsSnapshot.size;
+    const subcategoryToCategory = {};
 
-    // Contar categorías y estados
-    ticketsSnapshot.docs.forEach(ticketDoc => {
+    categories.forEach(doc => {
+        const categoryId = doc.id;
+        const subcategoryMap = doc.data();
+
+        Object.keys(subcategoryMap).forEach(subcategory => {
+            subcategoryToCategory[subcategory] = categoryId;
+            if (!categoryCount[categoryId]) {
+                categoryCount[categoryId] = 0;
+            }
+        });
+    });
+
+    // Obtener tickets
+    const ticketsSnapshot = await db.collection('tickets').get();
+    console.log(`Total de tickets encontrados: ${ticketsSnapshot.size}`);
+
+    const countedCategories = new Set(); // Para evitar contar categorías duplicadas
+
+    ticketsSnapshot.forEach(ticketDoc => {
         const ticketData = ticketDoc.data();
+        totalTickets++;
 
         (ticketData.tags || []).forEach(tag => {
-            categoryCount[tag] = (categoryCount[tag] || 0) + 1;
+            const category = subcategoryToCategory[tag];
+            if (category && !countedCategories.has(category)) { // Solo contar si no se ha contado ya
+                categoryCount[category] = (categoryCount[category] || 0) + 1;
+                countedCategories.add(category); // Añadir a la lista de categorías contadas
+            }
         });
 
         const state = ticketData.state;
-        stateCount[state] = (stateCount[state] || 0) + 1;
+        if (state) {
+            stateCount[state] = (stateCount[state] || 0) + 1;
+        } else {
+            console.log(`Ticket ID: ${ticketDoc.id} no tiene un estado definido`);
+        }
     });
 
-    // Preparar métricas para las tarjetas
+    // Consultar usuarios inhabilitados desde Firebase Auth
+    const listAllUsers = async (nextPageToken) => {
+        const result = await auth.listUsers(1000, nextPageToken);
+        return result.users;
+    };
+
+    let usersAuth = [];
+    let nextPageToken;
+    do {
+        const users = await listAllUsers(nextPageToken);
+        usersAuth = usersAuth.concat(users);
+        nextPageToken = users.pageToken;
+    } while (nextPageToken);
+
+    const totalDisabledUsers = usersAuth.filter(user => user.disabled).length;
+
+    // Filtrar datos para las gráficas
+    const filterData = (data) => {
+        return Object.entries(data).filter(([key, value]) => value > 0).reduce((acc, [key, value]) => {
+            acc[key] = value;
+            return acc;
+        }, {});
+    };
+
+    const filteredCategoryCount = filterData(categoryCount);
+    const filteredStateCount = filterData(stateCount);
+    const filteredSubcategoryCount = filterData(subcategoryCount);
+    const filteredCityCount = filterData(cityCount);
+
+    // Preparar métricas
     const metrics = [
         {
             title_card: 'Usuarios Registrados',
@@ -99,26 +150,34 @@ router.get('/', async (req, res) => {
             title_card: 'Tickets Creados',
             value: totalTickets,
             description: startDate && endDate ? `Tickets creados del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Total de tickets creados'
+        },
+        {
+            title_card: 'Usuarios Inhabilitados',
+            value: totalDisabledUsers,
+            description: 'Usuarios cuya cuenta ha sido inhabilitada'
         }
     ];
 
-    // Pasar los datos a la vista
+    console.log("Estado Count:", filteredStateCount); // Agregar para verificar los estados
+
     res.render('dashboard', {
         metrics,
         layout: 'main',
         showNavbar: true,
         startDate: startDate ? startDate.toISOString().split('T')[0] : null,
         endDate: endDate ? endDate.toISOString().split('T')[0] : null,
-        barChartLabels: JSON.stringify(Object.keys(stateCount)),
-        barChartData: JSON.stringify(Object.values(stateCount)),
-        categoryChartLabels: JSON.stringify(Object.keys(categoryCount)),
-        categoryChartData: JSON.stringify(Object.values(categoryCount)),
-        subcategoryChartLabels: JSON.stringify(Object.keys(subcategoryCount)),
-        subcategoryChartData: JSON.stringify(Object.values(subcategoryCount)),
-        cityChartLabels: JSON.stringify(Object.keys(cityCount)),
-        cityChartData: JSON.stringify(Object.values(cityCount))
+        barChartLabels: JSON.stringify(Object.keys(filteredStateCount)),
+        barChartData: JSON.stringify(Object.values(filteredStateCount)),
+        categoryChartLabels: JSON.stringify(Object.keys(filteredCategoryCount)),
+        categoryChartData: JSON.stringify(Object.values(filteredCategoryCount)),
+        subcategoryChartLabels: JSON.stringify(Object.keys(filteredSubcategoryCount)),
+        subcategoryChartData: JSON.stringify(Object.values(filteredSubcategoryCount)),
+        cityChartLabels: JSON.stringify(Object.keys(filteredCityCount)),
+        cityChartData: JSON.stringify(Object.values(filteredCityCount))
     });
 });
+
+
 
 
 
