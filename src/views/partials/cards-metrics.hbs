@@ -41,8 +41,47 @@
     </div>
 </div>
 
+<canvas id="userTrendChart" width="400" height="200"></canvas>
 
 <script>
+    
+    const ctxUserTrend = document.getElementById('userTrendChart').getContext('2d');
+    const userTrendChart = new Chart(ctxUserTrend, {
+        type: 'line',
+        data: {
+            labels: {{{ userTrendLabels }}},
+            datasets: [{
+                label: 'Usuarios Registrados',
+                data: {{{ userTrendData }}},
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                fill: true,
+                borderWidth: 2
+            }]
+        },
+       options: {
+            responsive: true,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Fecha'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Número de Usuarios'
+                    },
+                    beginAtZero: true // Para que el gráfico comience en cero
+                }
+            }
+        }
+    });
+
+
+
+
       // Gráfico de Barras para la Ciudad
     const ctxCity = document.getElementById('cityChart').getContext('2d');
     const cityChart = new Chart(ctxCity, {

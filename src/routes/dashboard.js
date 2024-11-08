@@ -31,6 +31,33 @@ router.get('/', async (req, res) => {
     const usersSnapshot = await usersQuery.get();
     const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
 
+    const getUsersByDateRange = (usersData) => {
+        const usersByDate = {};
+
+        usersData.forEach((user) => {
+
+            const createdAt = user.data.createdAt.toDate().toISOString().split('T')[0]; // Formato 'YYYY-MM-DD'
+            // Asegura que se sume sin sobrescribir el valor existente
+            console.log('Fecha de registro:', createdAt);
+            if (!usersByDate[createdAt]) {
+                usersByDate[createdAt] = 1;
+            } else {
+                usersByDate[createdAt] += 1;
+            }
+        });
+
+        console.log('Usuarios agrupados por fecha:', usersByDate);
+       // process.exit ()
+        // Ordenar las fechas
+        const sortedDates = Object.keys(usersByDate).sort();
+        const labels = sortedDates;
+        const data = sortedDates.map(date => usersByDate[date]);
+
+        return { labels, data };
+    };
+    const { labels: userTrendLabels, data: userTrendData } = getUsersByDateRange(usersData);
+
+
     let totalUsers = usersData.length;
     let totalProfessionals = 0;
     let subcategoryCount = {};
@@ -160,21 +187,29 @@ router.get('/', async (req, res) => {
 
     console.log("Estado Count:", filteredStateCount); // Agregar para verificar los estados
 
+    // Utilidad para transformar datos a JSON seguro para HBS
+    const jsonify = (data) => JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+
+    // Enviar datos a la vista
     res.render('dashboard', {
         metrics,
         layout: 'main',
         showNavbar: true,
         startDate: startDate ? startDate.toISOString().split('T')[0] : null,
         endDate: endDate ? endDate.toISOString().split('T')[0] : null,
-        barChartLabels: JSON.stringify(Object.keys(filteredStateCount)),
-        barChartData: JSON.stringify(Object.values(filteredStateCount)),
-        categoryChartLabels: JSON.stringify(Object.keys(filteredCategoryCount)),
-        categoryChartData: JSON.stringify(Object.values(filteredCategoryCount)),
-        subcategoryChartLabels: JSON.stringify(Object.keys(filteredSubcategoryCount)),
-        subcategoryChartData: JSON.stringify(Object.values(filteredSubcategoryCount)),
-        cityChartLabels: JSON.stringify(Object.keys(filteredCityCount)),
-        cityChartData: JSON.stringify(Object.values(filteredCityCount))
+        barChartLabels: jsonify(Object.keys(filteredStateCount)),
+        barChartData: jsonify(Object.values(filteredStateCount)),
+        categoryChartLabels: jsonify(Object.keys(filteredCategoryCount)),
+        categoryChartData: jsonify(Object.values(filteredCategoryCount)),
+        subcategoryChartLabels: jsonify(Object.keys(filteredSubcategoryCount)),
+        subcategoryChartData: jsonify(Object.values(filteredSubcategoryCount)),
+        cityChartLabels: jsonify(Object.keys(filteredCityCount)),
+        cityChartData: jsonify(Object.values(filteredCityCount)),
+        userTrendLabels: jsonify(userTrendLabels),
+        userTrendData: jsonify(userTrendData)
     });
+
+
 });
 
 
