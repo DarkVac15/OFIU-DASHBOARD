@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 //import jwt from 'jsonwebtoken';
 const { db, auth } = require("../config/firebase");
-
+const path = require('path');
 router.get('/', (req, res) => {
   const message = req.query.message || null;
 
@@ -26,7 +26,15 @@ router.post('/setToken', (req, res) => {
 });
 
 
+router.get('/docs/politica-privacidad', (req, res) => {
+  const filePath = path.join(__dirname, '../public/docs/PolíticadePrivacidad.pdf');
+  res.sendFile(filePath);
+});
 
+router.get('/docs/terminos-condiciones', (req, res) => {
+  const filePath = path.join(__dirname, '../public/docs/TérminosyCondicionesdeUso.pdf');
+  res.sendFile(filePath);
+});
 
 router.post('/logout', (req, res) => {
   // Elimina la cookie del token
@@ -37,7 +45,7 @@ router.post('/logout', (req, res) => {
 
 //colocar un rol admi aun user
 
-
+/*
 router.get('/set-admin', async (req, res) => {
   const uid = "9fKtiZmpQEb7B05sK73E3Xlhls83";
 
@@ -52,6 +60,6 @@ router.get('/set-admin', async (req, res) => {
     console.error("Error al asignar rol de admin:", error);
     res.status(500).json({ message: 'Error al asignar rol de admin' });
   }
-});
+});*/
 
 module.exports = router;

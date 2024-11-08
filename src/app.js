@@ -30,7 +30,7 @@ app.use(express.urlencoded({ extended: true }));  // Cambiado extend a extended
 app.use('/', require("./routes/index"));  // Rutas generales como login y registro
 
 app.use('/etiquetas',verifyToken, require('./routes/tags'));  // Rutas para etiquetas
-app.use('/dashboard',  require('./routes/dashboard'));  // Rutas para etiquetas
+app.use('/dashboard',verifyToken,  require('./routes/dashboard'));  // Rutas para etiquetas
 app.use('/user', verifyToken,require('./routes/users'));  // Rutas para user
 app.use('/api',checkApiKey, require('./routes/api'));  //
 

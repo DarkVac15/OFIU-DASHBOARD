@@ -30,36 +30,83 @@
         <h2> Tickets por Etiqueta</h2>
         <canvas id="categoryChart" width="400" height="200"></canvas>
     </div>
-
     <div class="col-md-4 text-white bg-dark">
-        <h2>Subcategorías de Profesionales</h2>
-        <canvas id="subcategoryChart" width="400" height="200"></canvas>
-    </div>
-     <div class="col-md-4 text-white bg-dark">
-       <h2> Profesionales por Ciudad</h2>
+        <h2> Profesionales por Ciudad</h2>
         <canvas id="cityChart" width="400" height="200"></canvas>
+    </div>
+
+</div>
+
+<div class="row">
+ <h2 class="text-white"> Graficas de lineas </h2>
+    <div class="col-md-4 text-white bg-dark">
+        <h3>  Registro de usuarios</h3>
+        <canvas id="userTrendChart" width="400" height="200"></canvas>
+    </div>
+    <div class="col-md-4 text-white bg-dark">
+        <h3>Registro de Profesionales</h3>
+        <canvas id="professionalTrendChart" width="400" height="200"></canvas>
+    </div>
+    <div class="col-md-4 text-white bg-dark">
+        <h3>Creacion de tickets</h3>
+        <canvas id="ticketTrendChart" width="400" height="200"></canvas>
     </div>
 </div>
 
-<canvas id="userTrendChart" width="400" height="200"></canvas>
 
 <script>
-    
-    const ctxUserTrend = document.getElementById('userTrendChart').getContext('2d');
-    const userTrendChart = new Chart(ctxUserTrend, {
+ // Obtén el contexto del canvas
+    const ctx = document.getElementById('ticketTrendChart').getContext('2d');
+
+    // Crear el gráfico de línea
+    const ticketTrendChart = new Chart(ctx, {
+        type: 'line',  // Tipo de gráfico: línea
+        data: {
+            labels: JSON.parse('{{{ticketTrendLabels}}}'),  // Etiquetas para el eje X (fechas de tickets)
+            datasets: [{
+                label: 'Tickets Creados',
+                data: JSON.parse('{{{ticketTrendData}}}'),  // Datos para el eje Y (cantidad de tickets)
+                fill: false,  // No llenar el área bajo la línea
+                borderColor: 'rgba(54, 162, 235, 1)',  // Color de la línea
+                tension: 0.1,  // Suavizar la curva de la línea
+            }]
+        },
+        options: {
+            responsive: true,  // Ajuste responsivo
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Fecha'  // Título del eje X
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Número de Tickets'  // Título del eje Y
+                    }
+                }
+            }
+        }
+    });
+
+
+
+const ctxProfessionalTrend = document.getElementById('professionalTrendChart').getContext('2d');
+    const professionalTrendChart = new Chart(ctxProfessionalTrend, {
         type: 'line',
         data: {
-            labels: {{{ userTrendLabels }}},
+            labels: JSON.parse('{{{professionalTrendLabels}}}'),
             datasets: [{
-                label: 'Usuarios Registrados',
-                data: {{{ userTrendData }}},
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                label: 'Profesionales Registrados',
+                data: JSON.parse('{{{professionalTrendData}}}'),
+                borderColor: 'rgba(54, 162, 235, 1)', // Color azul para el borde
+                backgroundColor: 'rgba(54, 162, 235, 0.2)', // Fondo azul claro
                 fill: true,
                 borderWidth: 2
             }]
         },
-       options: {
+        options: {
             responsive: true,
             scales: {
                 x: {
@@ -71,9 +118,9 @@
                 y: {
                     title: {
                         display: true,
-                        text: 'Número de Usuarios'
+                        text: 'Número de Profesionales'
                     },
-                    beginAtZero: true // Para que el gráfico comience en cero
+                    beginAtZero: true
                 }
             }
         }
@@ -82,7 +129,46 @@
 
 
 
-      // Gráfico de Barras para la Ciudad
+
+
+    const ctxUserTrend = document.getElementById('userTrendChart').getContext('2d');
+    const userTrendChart = new Chart(ctxUserTrend, {
+        type: 'line',
+        data: {
+            labels: {{{ userTrendLabels }}},
+    datasets: [{
+        label: 'Usuarios Registrados',
+        data: {{{ userTrendData }}},
+        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        fill: true,
+        borderWidth: 2
+            }]
+        },
+    options: {
+        responsive: true,
+            scales: {
+            x: {
+                title: {
+                    display: true,
+                        text: 'Fecha'
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                        text: 'Número de Usuarios'
+                },
+                beginAtZero: true // Para que el gráfico comience en cero
+            }
+        }
+    }
+    });
+
+
+
+
+    // Gráfico de Barras para la Ciudad
     const ctxCity = document.getElementById('cityChart').getContext('2d');
     const cityChart = new Chart(ctxCity, {
         type: 'bar',
@@ -107,24 +193,24 @@
     const barChart = new Chart(ctxBar, {
         type: 'bar',
         data: {
-             labels: JSON.parse('{{{ barChartLabels }}}'),  // Convertir a JSON
-                datasets: [{
+            labels: JSON.parse('{{{ barChartLabels }}}'),  // Convertir a JSON
+            datasets: [{
                 label: 'Cantidad de Tickets',
-                 data: JSON.parse('{{{ barChartData }}}'),  // Convertir a JSON
+                data: JSON.parse('{{{ barChartData }}}'),  // Convertir a JSON
                 backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                 }]
-             },
-    options: {
-        scales: {
-            y: {
-                beginAtZero: true
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
             }
         }
-    }
     });
 
-const categoryLabels = JSON.parse('{{{ categoryChartLabels }}}');
-const categoryData = JSON.parse('{{{ categoryChartData }}}');
+    const categoryLabels = JSON.parse('{{{ categoryChartLabels }}}');
+    const categoryData = JSON.parse('{{{ categoryChartData }}}');
     // Configurar el gráfico de barras de categorías
     const ctxCategory = document.getElementById('categoryChart').getContext('2d');
     const categoryChart = new Chart(ctxCategory, {
@@ -147,15 +233,15 @@ const categoryData = JSON.parse('{{{ categoryChartData }}}');
             }
         }
     });
-  // Gráfico de Subcategorías de Profesionales
+    // Gráfico de Subcategorías de Profesionales
     const ctxSubcategory = document.getElementById('subcategoryChart').getContext('2d');
     const subcategoryChart = new Chart(ctxSubcategory, {
         type: 'bar',
         data: {
-             labels: JSON.parse('{{{ subcategoryChartLabels }}}'),  // Convertir a JSON
+            labels: JSON.parse('{{{ subcategoryChartLabels }}}'),  // Convertir a JSON
             datasets: [{
                 label: 'Cantidad de Profesionales',
-                 data: JSON.parse('{{{ subcategoryChartData }}}'),  // Convertir a JSON
+                data: JSON.parse('{{{ subcategoryChartData }}}'),  // Convertir a JSON
                 backgroundColor: 'rgba(153, 102, 255, 0.6)', // Color de las barras
                 borderColor: 'rgba(153, 102, 255, 1)',       // Color del borde
                 borderWidth: 1

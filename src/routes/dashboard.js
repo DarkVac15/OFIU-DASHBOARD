@@ -31,14 +31,12 @@ router.get('/', async (req, res) => {
     const usersSnapshot = await usersQuery.get();
     const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
 
+    // Obtener usuarios normales
     const getUsersByDateRange = (usersData) => {
         const usersByDate = {};
 
         usersData.forEach((user) => {
-
             const createdAt = user.data.createdAt.toDate().toISOString().split('T')[0]; // Formato 'YYYY-MM-DD'
-            // Asegura que se sume sin sobrescribir el valor existente
-            console.log('Fecha de registro:', createdAt);
             if (!usersByDate[createdAt]) {
                 usersByDate[createdAt] = 1;
             } else {
@@ -46,17 +44,44 @@ router.get('/', async (req, res) => {
             }
         });
 
-        console.log('Usuarios agrupados por fecha:', usersByDate);
-       // process.exit ()
-        // Ordenar las fechas
         const sortedDates = Object.keys(usersByDate).sort();
         const labels = sortedDates;
         const data = sortedDates.map(date => usersByDate[date]);
 
         return { labels, data };
     };
+
     const { labels: userTrendLabels, data: userTrendData } = getUsersByDateRange(usersData);
 
+    // Obtener usuarios profesionales
+    const getProfessionalsByDateRange = async (usersData) => {
+        const professionalsByDate = {};
+
+        for (const user of usersData) {
+            const professionalSnapshot = await db.collection('users').doc(user.id).collection('professionalData').doc('data').get();
+            const professionalData = professionalSnapshot.exists ? professionalSnapshot.data() : null;
+
+            if (professionalData) {
+                const createdAt = professionalData.createdAt?.toDate().toISOString().split('T')[0]; // Formato 'YYYY-MM-DD'
+
+                if (createdAt) {
+                    if (!professionalsByDate[createdAt]) {
+                        professionalsByDate[createdAt] = 1;
+                    } else {
+                        professionalsByDate[createdAt] += 1;
+                    }
+                }
+            }
+        }
+
+        const sortedDates = Object.keys(professionalsByDate).sort();
+        const labels = sortedDates;
+        const data = sortedDates.map(date => professionalsByDate[date]);
+
+        return { labels, data };
+    };
+
+    const { labels: professionalTrendLabels, data: professionalTrendData } = await getProfessionalsByDateRange(usersData);
 
     let totalUsers = usersData.length;
     let totalProfessionals = 0;
@@ -65,29 +90,6 @@ router.get('/', async (req, res) => {
     let stateCount = {};
     let cityCount = {};
     let totalTickets = 0;
-
-    // Contar profesionales
-    const professionalPromises = usersData.map(async user => {
-        const professionalSnapshot = await db.collection('users').doc(user.id).collection('professionalData').doc('data').get();
-        return professionalSnapshot.exists ? professionalSnapshot.data() : null;
-    });
-    const professionals = await Promise.all(professionalPromises);
-
-    professionals.forEach(professionalData => {
-        if (professionalData) {
-            const professionalCreatedAt = professionalData.createdAt;
-            const city = professionalData.city;
-            if ((!startDate && !endDate) || (professionalCreatedAt && professionalCreatedAt.toDate() >= startDate && professionalCreatedAt.toDate() <= endDate)) {
-                totalProfessionals++;
-                (professionalData.skills || []).forEach(skill => {
-                    subcategoryCount[skill] = (subcategoryCount[skill] || 0) + 1;
-                });
-                if (city) {
-                    cityCount[city] = (cityCount[city] || 0) + 1;
-                }
-            }
-        }
-    });
 
     const categoriesSnapshot = await db.collection('category').get();
     const categories = categoriesSnapshot.docs;
@@ -106,6 +108,33 @@ router.get('/', async (req, res) => {
         });
     });
 
+    // Contar profesionales
+    const professionalPromises = usersData.map(async user => {
+        const professionalSnapshot = await db.collection('users').doc(user.id).collection('professionalData').doc('data').get();
+        return professionalSnapshot.exists ? professionalSnapshot.data() : null;
+    });
+
+    const professionals = await Promise.all(professionalPromises);
+
+    professionals.forEach(professionalData => {
+        if (professionalData) {
+            const professionalCreatedAt = professionalData.createdAt;
+            const city = professionalData.city;
+
+            if ((!startDate && !endDate) || (professionalCreatedAt && professionalCreatedAt.toDate() >= startDate && professionalCreatedAt.toDate() <= endDate)) {
+                totalProfessionals++;
+
+                (professionalData.skills || []).forEach(skill => {
+                    subcategoryCount[skill] = (subcategoryCount[skill] || 0) + 1;
+                });
+
+                if (city) {
+                    cityCount[city] = (cityCount[city] || 0) + 1;
+                }
+            }
+        }
+    });
+
     // Obtener tickets
     const ticketsSnapshot = await db.collection('tickets').get();
     console.log(`Total de tickets encontrados: ${ticketsSnapshot.size}`);
@@ -118,7 +147,7 @@ router.get('/', async (req, res) => {
 
         (ticketData.tags || []).forEach(tag => {
             const category = subcategoryToCategory[tag];
-            if (category && !countedCategories.has(category)) { // Solo contar si no se ha contado ya
+            if (category && !countedCategories.has(category)) {
                 categoryCount[category] = (categoryCount[category] || 0) + 1;
                 countedCategories.add(category); // Añadir a la lista de categorías contadas
             }
@@ -127,10 +156,34 @@ router.get('/', async (req, res) => {
         const state = ticketData.state;
         if (state) {
             stateCount[state] = (stateCount[state] || 0) + 1;
-        } else {
-            console.log(`Ticket ID: ${ticketDoc.id} no tiene un estado definido`);
         }
     });
+
+    const ticketsData = ticketsSnapshot.docs.map(doc => doc.data());
+
+    const getTicketsByDateRange = async (ticketsData) => {
+        const ticketsByDate = {};
+
+        for (const ticket of ticketsData) {
+            const createdAt = ticket.createdAt?.toDate().toISOString().split('T')[0]; // Formato 'YYYY-MM-DD'
+
+            if (createdAt) {
+                if (!ticketsByDate[createdAt]) {
+                    ticketsByDate[createdAt] = 1;
+                } else {
+                    ticketsByDate[createdAt] += 1;
+                }
+            }
+        }
+
+        const sortedDates = Object.keys(ticketsByDate).sort();
+        const labels = sortedDates;
+        const data = sortedDates.map(date => ticketsByDate[date]);
+
+        return { labels, data };
+    };
+
+    const { labels: ticketTrendLabels, data: ticketTrendData } = await getTicketsByDateRange(ticketsData);
 
     // Consultar usuarios inhabilitados desde Firebase Auth
     const listAllUsers = async (nextPageToken) => {
@@ -176,21 +229,17 @@ router.get('/', async (req, res) => {
         {
             title_card: 'Tickets Creados',
             value: totalTickets,
-            description: startDate && endDate ? `Tickets creados del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Total de tickets creados'
+            description: startDate && endDate ? `Tickets creados del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Tickets totales creados'
         },
         {
             title_card: 'Usuarios Inhabilitados',
             value: totalDisabledUsers,
-            description: 'Usuarios cuya cuenta ha sido inhabilitada'
+            description: 'Total de usuarios inhabilitados'
         }
     ];
-
-    console.log("Estado Count:", filteredStateCount); // Agregar para verificar los estados
-
-    // Utilidad para transformar datos a JSON seguro para HBS
-    const jsonify = (data) => JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
-
-    // Enviar datos a la vista
+ // Utilidad para transformar datos a JSON seguro para HBS
+ const jsonify = (data) => JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+    // Renderizar la vista con los datos
     res.render('dashboard', {
         metrics,
         layout: 'main',
@@ -206,11 +255,16 @@ router.get('/', async (req, res) => {
         cityChartLabels: jsonify(Object.keys(filteredCityCount)),
         cityChartData: jsonify(Object.values(filteredCityCount)),
         userTrendLabels: jsonify(userTrendLabels),
-        userTrendData: jsonify(userTrendData)
+        userTrendData: jsonify(userTrendData),
+        professionalTrendLabels: jsonify(professionalTrendLabels), // Convierte a JSON
+        professionalTrendData: jsonify(professionalTrendData) ,   // Convierte a JSON
+        ticketTrendLabels: jsonify(ticketTrendLabels),
+        ticketTrendData: jsonify(ticketTrendData)
     });
-
-
 });
+
+
+
 
 
 
@@ -318,7 +372,7 @@ async function exportDashboardToPDF(metrics, stateCount, categoryCount, cityCoun
     fs.writeFileSync('dashboard-report.pdf', pdfBytes);
 }
 
-module.exports = exportDashboardToPDF;
+
 
 
 
