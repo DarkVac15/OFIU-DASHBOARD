@@ -38,9 +38,9 @@
 </div>
 
 <div class="row">
- <h2 class="text-white"> Graficas de lineas </h2>
+    <h2 class="text-white"> Graficas de lineas </h2>
     <div class="col-md-4 text-white bg-dark">
-        <h3>  Registro de usuarios</h3>
+        <h3> Registro de usuarios</h3>
         <canvas id="userTrendChart" width="400" height="200"></canvas>
     </div>
     <div class="col-md-4 text-white bg-dark">
@@ -54,8 +54,84 @@
 </div>
 
 
+<div class="row">
+    <h2 class="text-white"> Mapa de calor de ticktes abiertos </h2>
+
+    <div id="map"></div>
+    <div id="ticketCounts" class="text-white mt-3">
+        <p><strong>Tickets por Ciudad:</strong></p>
+        <ul id="ticketCountList">
+            <!-- Los datos de las ciudades y los tickets se agregarán aquí mediante JavaScript -->
+        </ul>
+    </div>
+
+</div>
+
+
+<style>
+    #map {
+        width: 70%;
+        height: 300px;
+        /* Ajusta la altura según tus necesidades */
+    }
+</style>
 <script>
- // Obtén el contexto del canvas
+
+    // Coordenadas de las ciudades
+    const citiesCoordinates = {
+        "Espinal": { lat: 4.14924, lng: -74.88429 },
+        "Girardot": { lat: 4.30079, lng: -74.80754 },
+        "Guamo": { lat: 4.03078, lng: -74.9701 },
+         "Flandes": { lat: 4.29005, lng: -74.81612 }
+    };
+
+    // Ubicaciones de los trabajos (ciudades) y el número de trabajos en cada ciudad
+    const locationData = {{{ locationChartLabels }}}; // Por ejemplo: ["El Espinal", "Ibagué", "Melgar"]
+    const locationValues = {{{ locationChartData }}}; // Ejemplo: [10, 20, 15] (Número de trabajos por ciudad)
+
+    // Crear el mapa de Leaflet, centrado en una ciudad por defecto (por ejemplo, El Espinal)
+    // Crear el mapa de Leaflet, centrado en una ciudad por defecto (por ejemplo, El Espinal)
+    const map = L.map('map').setView([4.22305, -74.83435], 11);
+
+    // Añadir capa de OpenStreetMap al mapa
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Asegúrate de que el mapa se ajusta a su contenedor después de cargar
+    map.on('load', function () {
+        map.invalidateSize();
+    });
+
+    // Agregar los círculos (burbujas) a cada ciudad en el mapa
+    locationData.forEach((city, index) => {
+        // Obtener las coordenadas de la ciudad usando el objeto `citiesCoordinates`
+        const { lat, lng } = citiesCoordinates[city];
+        const ticketCount = locationValues[index]; // Número de tickets en esa ciudad
+        const circleSize = ticketCount * 2;
+        // Crear un círculo (burbuja) para representar el número de tickets en la ciudad
+        L.circleMarker([lat, lng], {
+            radius: circleSize,  // Tamaño del círculo basado en el número de tickets
+            color: 'blue',  // Color del borde del círculo
+            fillColor: 'blue',  // Color de relleno
+            fillOpacity: 0.6  // Opacidad del relleno
+        }).addTo(map)
+            .bindPopup(`${city}: ${ticketCount} Tickets`); // Mostrar el número de tickets en un popup al hacer clic
+    });
+
+    // Iterar sobre las ciudades y agregar cada una a la lista de tickets
+    const ticketCountList = document.getElementById('ticketCountList');
+    locationData.forEach((city, index) => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${city}: ${locationValues[index]} Tickets`;
+        ticketCountList.appendChild(listItem);
+    });
+
+
+
+
+
+    // Obtén el contexto del canvas
     const ctx = document.getElementById('ticketTrendChart').getContext('2d');
 
     // Crear el gráfico de línea
@@ -92,7 +168,7 @@
 
 
 
-const ctxProfessionalTrend = document.getElementById('professionalTrendChart').getContext('2d');
+    const ctxProfessionalTrend = document.getElementById('professionalTrendChart').getContext('2d');
     const professionalTrendChart = new Chart(ctxProfessionalTrend, {
         type: 'line',
         data: {

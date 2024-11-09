@@ -6,6 +6,7 @@ const { db, auth } = require("../config/firebase");
 // Ruta para mostrar el dashboard, protegida con el middleware de autenticación
 
 // Asegúrate de que Firebase Admin esté inicializado
+// Asegúrate de que Firebase Admin esté inicializado
 router.get('/', async (req, res) => {
     const startDate = req.query.startDate ? new Date(req.query.startDate) : null;
     const endDate = req.query.endDate ? new Date(req.query.endDate) : null;
@@ -90,6 +91,7 @@ router.get('/', async (req, res) => {
     let stateCount = {};
     let cityCount = {};
     let totalTickets = 0;
+    let locationCount = {}; // Contador para la ubicación de los trabajos
 
     const categoriesSnapshot = await db.collection('category').get();
     const categories = categoriesSnapshot.docs;
@@ -137,28 +139,47 @@ router.get('/', async (req, res) => {
 
     // Obtener tickets
     const ticketsSnapshot = await db.collection('tickets').get();
-    console.log(`Total de tickets encontrados: ${ticketsSnapshot.size}`);
+   // console.log(`Total de tickets encontrados: ${ticketsSnapshot.size}`);
 
     const countedCategories = new Set(); // Para evitar contar categorías duplicadas
 
     ticketsSnapshot.forEach(ticketDoc => {
         const ticketData = ticketDoc.data();
-        totalTickets++;
-
-        (ticketData.tags || []).forEach(tag => {
-            const category = subcategoryToCategory[tag];
-            if (category && !countedCategories.has(category)) {
-                categoryCount[category] = (categoryCount[category] || 0) + 1;
-                countedCategories.add(category); // Añadir a la lista de categorías contadas
+        const ticketCreatedAt = ticketData.createdAt?.toDate();
+    
+        // Verifica si la fecha de creación está dentro del rango
+        if ((!startDate && !endDate) || 
+            (ticketCreatedAt && ticketCreatedAt >= startDate && ticketCreatedAt <= endDate)) {
+            
+            totalTickets++;
+    
+            // Contabilizar las categorías
+            (ticketData.tags || []).forEach(tag => {
+                const category = subcategoryToCategory[tag];
+                if (category && !countedCategories.has(category)) {
+                    categoryCount[category] = (categoryCount[category] || 0) + 1;
+                    countedCategories.add(category); // Añadir a la lista de categorías contadas
+                }
+            });
+    
+            // Contabilizar el estado de cada ticket
+            const state = ticketData.state;
+            if (state) {
+                stateCount[state] = (stateCount[state] || 0) + 1;
             }
-        });
-
-        const state = ticketData.state;
-        if (state) {
-            stateCount[state] = (stateCount[state] || 0) + 1;
+    
+            // Contabilizar la ubicación del trabajo
+            const location = ticketData.cityTicket;
+            
+            if (state === "Abierto" && location) {
+                locationCount[location] = (locationCount[location] || 0) + 1;
+            }
         }
     });
+    
+    
 
+    
     const ticketsData = ticketsSnapshot.docs.map(doc => doc.data());
 
     const getTicketsByDateRange = async (ticketsData) => {
@@ -213,6 +234,7 @@ router.get('/', async (req, res) => {
     const filteredStateCount = filterData(stateCount);
     const filteredSubcategoryCount = filterData(subcategoryCount);
     const filteredCityCount = filterData(cityCount);
+    const filteredLocationCount = filterData(locationCount);
 
     // Preparar métricas
     const metrics = [
@@ -238,7 +260,10 @@ router.get('/', async (req, res) => {
         }
     ];
  // Utilidad para transformar datos a JSON seguro para HBS
+ console.log(filteredLocationCount)
+ 
  const jsonify = (data) => JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+
     // Renderizar la vista con los datos
     res.render('dashboard', {
         metrics,
@@ -259,9 +284,12 @@ router.get('/', async (req, res) => {
         professionalTrendLabels: jsonify(professionalTrendLabels), // Convierte a JSON
         professionalTrendData: jsonify(professionalTrendData) ,   // Convierte a JSON
         ticketTrendLabels: jsonify(ticketTrendLabels),
-        ticketTrendData: jsonify(ticketTrendData)
+        ticketTrendData: jsonify(ticketTrendData),
+        locationChartLabels: jsonify(Object.keys(filteredLocationCount)),
+        locationChartData: jsonify(Object.values(filteredLocationCount))
     });
 });
+
 
 
 
