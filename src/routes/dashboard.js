@@ -21,7 +21,6 @@ router.get('/', async (req, res) => {
 
     tagsSnapshot.forEach(doc => {
         const data = doc.data();
-        // tagToCategory[doc.id] = data.titlesubcategory; // Asumiendo que el nombre del documento es la etiqueta y `titlesubcategory` es la categoría
     });
 
     let usersQuery = db.collection('users');
@@ -37,7 +36,7 @@ router.get('/', async (req, res) => {
         const usersByDate = {};
 
         usersData.forEach((user) => {
-            const createdAt = user.data.createdAt.toDate().toISOString().split('T')[0]; // Formato 'YYYY-MM-DD'
+            const createdAt = user.data.createdAt.toDate().toISOString().split('T')[0];
             if (!usersByDate[createdAt]) {
                 usersByDate[createdAt] = 1;
             } else {
@@ -54,26 +53,23 @@ router.get('/', async (req, res) => {
 
     const { labels: userTrendLabels, data: userTrendData } = getUsersByDateRange(usersData);
 
-    // Obtener usuarios profesionales
-    const getProfessionalsByDateRange = async (usersData) => {
+    // Obtener profesionales en la nueva colección "professionals"
+    const getProfessionalsByDateRange = async () => {
         const professionalsByDate = {};
 
-        for (const user of usersData) {
-            const professionalSnapshot = await db.collection('users').doc(user.id).collection('professionalData').doc('data').get();
-            const professionalData = professionalSnapshot.exists ? professionalSnapshot.data() : null;
+        const professionalsSnapshot = await db.collection('professionals').get();
+        professionalsSnapshot.forEach(doc => {
+            const professionalData = doc.data();
+            const createdAt = professionalData.createdAt?.toDate().toISOString().split('T')[0];
 
-            if (professionalData) {
-                const createdAt = professionalData.createdAt?.toDate().toISOString().split('T')[0]; // Formato 'YYYY-MM-DD'
-
-                if (createdAt) {
-                    if (!professionalsByDate[createdAt]) {
-                        professionalsByDate[createdAt] = 1;
-                    } else {
-                        professionalsByDate[createdAt] += 1;
-                    }
+            if (createdAt) {
+                if (!professionalsByDate[createdAt]) {
+                    professionalsByDate[createdAt] = 1;
+                } else {
+                    professionalsByDate[createdAt] += 1;
                 }
             }
-        }
+        });
 
         const sortedDates = Object.keys(professionalsByDate).sort();
         const labels = sortedDates;
@@ -82,7 +78,7 @@ router.get('/', async (req, res) => {
         return { labels, data };
     };
 
-    const { labels: professionalTrendLabels, data: professionalTrendData } = await getProfessionalsByDateRange(usersData);
+    const { labels: professionalTrendLabels, data: professionalTrendData } = await getProfessionalsByDateRange();
 
     let totalUsers = usersData.length;
     let totalProfessionals = 0;
@@ -91,7 +87,7 @@ router.get('/', async (req, res) => {
     let stateCount = {};
     let cityCount = {};
     let totalTickets = 0;
-    let locationCount = {}; // Contador para la ubicación de los trabajos
+    let locationCount = {};
 
     const categoriesSnapshot = await db.collection('category').get();
     const categories = categoriesSnapshot.docs;
@@ -110,83 +106,67 @@ router.get('/', async (req, res) => {
         });
     });
 
-    // Contar profesionales
-    const professionalPromises = usersData.map(async user => {
-        const professionalSnapshot = await db.collection('users').doc(user.id).collection('professionalData').doc('data').get();
-        return professionalSnapshot.exists ? professionalSnapshot.data() : null;
-    });
+    // Contar profesionales desde la nueva colección "professionals"
+    const professionalsSnapshot = await db.collection('professionals').get();
+    professionalsSnapshot.forEach(doc => {
+        const professionalData = doc.data();
+        const professionalCreatedAt = professionalData.createdAt;
+        const city = professionalData.city;
 
-    const professionals = await Promise.all(professionalPromises);
+        if ((!startDate && !endDate) || (professionalCreatedAt && professionalCreatedAt.toDate() >= startDate && professionalCreatedAt.toDate() <= endDate)) {
+            totalProfessionals++;
 
-    professionals.forEach(professionalData => {
-        if (professionalData) {
-            const professionalCreatedAt = professionalData.createdAt;
-            const city = professionalData.city;
+            (professionalData.skills || []).forEach(skill => {
+                subcategoryCount[skill] = (subcategoryCount[skill] || 0) + 1;
+            });
 
-            if ((!startDate && !endDate) || (professionalCreatedAt && professionalCreatedAt.toDate() >= startDate && professionalCreatedAt.toDate() <= endDate)) {
-                totalProfessionals++;
-
-                (professionalData.skills || []).forEach(skill => {
-                    subcategoryCount[skill] = (subcategoryCount[skill] || 0) + 1;
-                });
-
-                if (city) {
-                    cityCount[city] = (cityCount[city] || 0) + 1;
-                }
+            if (city) {
+                cityCount[city] = (cityCount[city] || 0) + 1;
             }
         }
     });
 
     // Obtener tickets
     const ticketsSnapshot = await db.collection('tickets').get();
-   // console.log(`Total de tickets encontrados: ${ticketsSnapshot.size}`);
 
-    const countedCategories = new Set(); // Para evitar contar categorías duplicadas
+    const countedCategories = new Set();
 
     ticketsSnapshot.forEach(ticketDoc => {
         const ticketData = ticketDoc.data();
         const ticketCreatedAt = ticketData.createdAt?.toDate();
-    
-        // Verifica si la fecha de creación está dentro del rango
+
         if ((!startDate && !endDate) || 
             (ticketCreatedAt && ticketCreatedAt >= startDate && ticketCreatedAt <= endDate)) {
             
             totalTickets++;
-    
-            // Contabilizar las categorías
+
             (ticketData.tags || []).forEach(tag => {
                 const category = subcategoryToCategory[tag];
                 if (category && !countedCategories.has(category)) {
                     categoryCount[category] = (categoryCount[category] || 0) + 1;
-                    countedCategories.add(category); // Añadir a la lista de categorías contadas
+                    countedCategories.add(category);
                 }
             });
-    
-            // Contabilizar el estado de cada ticket
+
             const state = ticketData.state;
             if (state) {
                 stateCount[state] = (stateCount[state] || 0) + 1;
             }
-    
-            // Contabilizar la ubicación del trabajo
+
             const location = ticketData.cityTicket;
-            
             if (state === "Abierto" && location) {
                 locationCount[location] = (locationCount[location] || 0) + 1;
             }
         }
     });
-    
-    
 
-    
     const ticketsData = ticketsSnapshot.docs.map(doc => doc.data());
 
     const getTicketsByDateRange = async (ticketsData) => {
         const ticketsByDate = {};
 
         for (const ticket of ticketsData) {
-            const createdAt = ticket.createdAt?.toDate().toISOString().split('T')[0]; // Formato 'YYYY-MM-DD'
+            const createdAt = ticket.createdAt?.toDate().toISOString().split('T')[0];
 
             if (createdAt) {
                 if (!ticketsByDate[createdAt]) {
@@ -222,7 +202,6 @@ router.get('/', async (req, res) => {
 
     const totalDisabledUsers = usersAuth.filter(user => user.disabled).length;
 
-    // Filtrar datos para las gráficas
     const filterData = (data) => {
         return Object.entries(data).filter(([key, value]) => value > 0).reduce((acc, [key, value]) => {
             acc[key] = value;
@@ -236,7 +215,6 @@ router.get('/', async (req, res) => {
     const filteredCityCount = filterData(cityCount);
     const filteredLocationCount = filterData(locationCount);
 
-    // Preparar métricas
     const metrics = [
         {
             title_card: 'Usuarios Registrados',
@@ -259,12 +237,9 @@ router.get('/', async (req, res) => {
             description: 'Total de usuarios inhabilitados'
         }
     ];
- // Utilidad para transformar datos a JSON seguro para HBS
- console.log(filteredLocationCount)
- 
- const jsonify = (data) => JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 
-    // Renderizar la vista con los datos
+    const jsonify = (data) => JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+
     res.render('dashboard', {
         metrics,
         layout: 'main',

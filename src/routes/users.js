@@ -5,7 +5,7 @@ const userController = require('../controller/mailController');
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-    const excludedUID = req.user.uid; // UID del usuario que deseas omitir
+    const excludedUID ="9fKtiZmpQEb7B05sK73E3Xlhls83"// req.user.uid; // UID del usuario que deseas omitir
     //  console.log(excludedUID);
     const usersList = [];
 
