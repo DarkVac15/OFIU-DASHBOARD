@@ -75,6 +75,7 @@
         /* Ajusta la altura según tus necesidades */
     }
 </style>
+
 <script>
 
     // Coordenadas de las ciudades
@@ -264,7 +265,7 @@
             }
         }
     });
-    // Gráfico de Barras
+    // Gráfico de Barras etiquetas pro tikcet
     const ctxBar = document.getElementById('barChart').getContext('2d');
     const barChart = new Chart(ctxBar, {
         type: 'bar',
@@ -309,26 +310,5 @@
             }
         }
     });
-    // Gráfico de Subcategorías de Profesionales
-    const ctxSubcategory = document.getElementById('subcategoryChart').getContext('2d');
-    const subcategoryChart = new Chart(ctxSubcategory, {
-        type: 'bar',
-        data: {
-            labels: JSON.parse('{{{ subcategoryChartLabels }}}'),  // Convertir a JSON
-            datasets: [{
-                label: 'Cantidad de Profesionales',
-                data: JSON.parse('{{{ subcategoryChartData }}}'),  // Convertir a JSON
-                backgroundColor: 'rgba(153, 102, 255, 0.6)', // Color de las barras
-                borderColor: 'rgba(153, 102, 255, 1)',       // Color del borde
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true // Asegura que el eje Y comience en 0
-                }
-            }
-        }
-    });
+  
 </script>

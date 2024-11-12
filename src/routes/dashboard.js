@@ -1,18 +1,25 @@
 const express = require('express');
 const router = express.Router();
-const { db, auth } = require("../config/firebase");
-//const verifyToken = require('../middleware/web');
 
-// Ruta para mostrar el dashboard, protegida con el middleware de autenticación
+const dashboardController = require('../controller/dashboardController');
 
-// Asegúrate de que Firebase Admin esté inicializado
-// Asegúrate de que Firebase Admin esté inicializado
-router.get('/', async (req, res) => {
-    const startDate = req.query.startDate ? new Date(req.query.startDate) : null;
-    const endDate = req.query.endDate ? new Date(req.query.endDate) : null;
+router.get('/', dashboardController.dataDashboard);
+router.get('/export-pdf', dashboardController.dataReports);
+
+
+/*router.get('/', async (req, res) => {
+    // Ajustar startDate y endDate a la zona horaria de Bogotá (UTC-5)
+ // Obtén las fechas del query string
+ const startDate = req.query.startDate ? new Date(req.query.startDate + "T00:00:00Z") : null; // Considerar UTC
+    const endDate = req.query.endDate ? new Date(req.query.endDate + "T23:59:59Z") : null;  // Hasta el final del día
+
+    // Ajustar las fechas a la zona horaria de Bogotá (UTC-5)
+    if (startDate) {
+        startDate.setHours(startDate.getHours() - 5); // Ajustar la fecha de inicio
+    }
 
     if (endDate) {
-        endDate.setHours(23, 59, 59, 999); // Incluir todo el día completo
+        endDate.setHours(endDate.getHours() - 5); // Ajustar la fecha de fin
     }
 
     // Obtener las categorías desde Firestore
@@ -36,7 +43,8 @@ router.get('/', async (req, res) => {
         const usersByDate = {};
 
         usersData.forEach((user) => {
-            const createdAt = user.data.createdAt.toDate().toISOString().split('T')[0];
+            const createdAt = user.data.createdAt.toDate().toLocaleString('en-CA', { timeZone: 'America/Bogota' }).split(',')[0];
+        
             if (!usersByDate[createdAt]) {
                 usersByDate[createdAt] = 1;
             } else {
@@ -60,7 +68,12 @@ router.get('/', async (req, res) => {
         const professionalsSnapshot = await db.collection('professionals').get();
         professionalsSnapshot.forEach(doc => {
             const professionalData = doc.data();
-            const createdAt = professionalData.createdAt?.toDate().toISOString().split('T')[0];
+
+            const createdAt = professionalData.createdAt
+            ?.toDate()
+            .toLocaleString('en-CA', { timeZone: 'America/Bogota' })
+            .split(',')[0];
+        
 
             if (createdAt) {
                 if (!professionalsByDate[createdAt]) {
@@ -128,64 +141,50 @@ router.get('/', async (req, res) => {
 
     // Obtener tickets
     const ticketsSnapshot = await db.collection('tickets').get();
-
     const countedCategories = new Set();
-
+    const ticketsByDate1 = {};
     ticketsSnapshot.forEach(ticketDoc => {
         const ticketData = ticketDoc.data();
-        const ticketCreatedAt = ticketData.createdAt?.toDate();
+  
+     const ticketCreatedAt = ticketData.createdAt.toDate();
+     const formattedDate = ticketCreatedAt.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' }); // 'YYYY-MM-DD'
 
-        if ((!startDate && !endDate) || 
-            (ticketCreatedAt && ticketCreatedAt >= startDate && ticketCreatedAt <= endDate)) {
-            
-            totalTickets++;
 
-            (ticketData.tags || []).forEach(tag => {
-                const category = subcategoryToCategory[tag];
-                if (category && !countedCategories.has(category)) {
-                    categoryCount[category] = (categoryCount[category] || 0) + 1;
-                    countedCategories.add(category);
-                }
-            });
+     if ((!startDate && !endDate) || (ticketCreatedAt >= startDate && ticketCreatedAt <= endDate)) {
 
-            const state = ticketData.state;
-            if (state) {
-                stateCount[state] = (stateCount[state] || 0) + 1;
+      
+            if (!ticketsByDate1[formattedDate]) {
+                ticketsByDate1[formattedDate] = 1;
+            } else {
+                ticketsByDate1[formattedDate] += 1;
             }
+       
 
-            const location = ticketData.cityTicket;
-            if (state === "Abierto" && location) {
-                locationCount[location] = (locationCount[location] || 0) + 1;
-            }
-        }
+
+         totalTickets++;
+         (ticketData.tags || []).forEach(tag => {
+             const category = subcategoryToCategory[tag];
+             if (category && !countedCategories.has(category)) {
+                 categoryCount[category] = (categoryCount[category] || 0) + 1;
+                 countedCategories.add(category);
+             }
+         });
+     
+         const state = ticketData.state;
+         if (state) {
+             stateCount[state] = (stateCount[state] || 0) + 1;
+         }
+     
+         const location = ticketData.cityTicket;
+         if (state === "Abierto" && location) {
+             locationCount[location] = (locationCount[location] || 0) + 1;
+         }
+     } 
+     
     });
-
-    const ticketsData = ticketsSnapshot.docs.map(doc => doc.data());
-
-    const getTicketsByDateRange = async (ticketsData) => {
-        const ticketsByDate = {};
-
-        for (const ticket of ticketsData) {
-            const createdAt = ticket.createdAt?.toDate().toISOString().split('T')[0];
-
-            if (createdAt) {
-                if (!ticketsByDate[createdAt]) {
-                    ticketsByDate[createdAt] = 1;
-                } else {
-                    ticketsByDate[createdAt] += 1;
-                }
-            }
-        }
-
-        const sortedDates = Object.keys(ticketsByDate).sort();
-        const labels = sortedDates;
-        const data = sortedDates.map(date => ticketsByDate[date]);
-
-        return { labels, data };
-    };
-
-    const { labels: ticketTrendLabels, data: ticketTrendData } = await getTicketsByDateRange(ticketsData);
-
+    const sortedDates = Object.keys(ticketsByDate1).sort();
+    const ticketTrendLabels = sortedDates;
+    const ticketTrendData = sortedDates.map(date => ticketsByDate1[date]);
     // Consultar usuarios inhabilitados desde Firebase Auth
     const listAllUsers = async (nextPageToken) => {
         const result = await auth.listUsers(1000, nextPageToken);
@@ -265,232 +264,8 @@ router.get('/', async (req, res) => {
     });
 });
 
+*/
 
-
-
-
-
-
-
-
-const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
-const fs = require('fs');
-
-async function exportDashboardToPDF(metrics, stateCount, categoryCount, cityCount, startDate, endDate) {
-    const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([595, 842]); // Tamaño A4
-    const { width, height } = page.getSize();
-
-    // Fuentes y colores
-    const fontTitle = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const fontContent = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    let currentY = height - 50;
-    const marginLeft = 50;
-
-    // Título del PDF
-    page.drawText('Reporte de Dashboard', {
-        x: marginLeft,
-        y: currentY,
-        size: 20,
-        font: fontTitle,
-        color: rgb(0, 0.5, 0.7),
-    });
-
-    // Agregar fecha de generación
-    const generationDate = new Date().toLocaleDateString();
-    page.drawText(`Fecha de generación: ${generationDate}`, {
-        x: marginLeft,
-        y: currentY - 30,
-        size: 12,
-        font: fontContent,
-        color: rgb(0, 0, 0),
-    });
-
-    // Agregar el rango de fechas (si está definido)
-    if (startDate && endDate) {
-        page.drawText(`Rango de fechas: ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`, {
-            x: marginLeft,
-            y: currentY - 50,
-            size: 12,
-            font: fontContent,
-            color: rgb(0, 0, 0),
-        });
-        currentY -= 70; // Ajuste para dejar espacio después del rango de fechas
-    } else {
-        currentY -= 50; // Ajuste si no hay rango de fechas
-    }
-
-    // Iterar sobre las métricas principales
-    metrics.forEach(metric => {
-        page.drawText(`${metric.title_card}: ${metric.value}`, {
-            x: marginLeft,
-            y: currentY,
-            size: 14,
-            font: fontTitle,
-            color: rgb(0.2, 0.4, 0.6),
-        });
-        currentY -= 20;
-        page.drawText(metric.description, {
-            x: marginLeft,
-            y: currentY,
-            size: 12,
-            font: fontContent,
-            color: rgb(0, 0, 0),
-        });
-        currentY -= 30;
-    });
-
-    // Sección para los gráficos de estado, categoría y ciudad
-    function drawSection(title, data) {
-        if (Object.keys(data).length > 0) {
-            page.drawText(title, {
-                x: marginLeft,
-                y: currentY,
-                size: 14,
-                font: fontTitle,
-                color: rgb(0.3, 0.5, 0.7),
-            });
-            currentY -= 20;
-
-            Object.entries(data).forEach(([key, value]) => {
-                page.drawText(`- ${key}: ${value}`, {
-                    x: marginLeft + 20,
-                    y: currentY,
-                    size: 12,
-                    font: fontContent,
-                    color: rgb(0, 0, 0),
-                });
-                currentY -= 15;
-            });
-            currentY -= 20;
-        }
-    }
-
-    drawSection('Estados de Tickets', stateCount);
-    drawSection('Categorías de Tickets', categoryCount);
-    drawSection('Usuarios profesionales por Ciudad', cityCount);
-
-    // Guarda y exporta el PDF
-    const pdfBytes = await pdfDoc.save();
-    fs.writeFileSync('dashboard-report.pdf', pdfBytes);
-}
-
-
-
-
-
-// Ruta para exportar el dashboard a PDF
-router.get('/export-pdf', async (req, res) => {
-    const startDate = req.query.startDate ? new Date(req.query.startDate) : null;
-    const endDate = req.query.endDate ? new Date(req.query.endDate) : null;
-
-    if (endDate) {
-        endDate.setHours(23, 59, 59, 999); // Incluir todo el día completo
-    }
-
-    // Consulta de usuarios (filtrada por fechas si existen)
-    let usersQuery = db.collection('users');
-    if (startDate && endDate) {
-        usersQuery = usersQuery.where('createdAt', '>=', startDate).where('createdAt', '<=', endDate);
-    }
-
-    const usersSnapshot = await usersQuery.get();
-    const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
-
-    // Variables para conteo
-    let totalUsers = usersData.length;
-    let totalProfessionals = 0;
-    let subcategoryCount = {};
-    let categoryCount = {};
-    let stateCount = {};
-    let cityCount = {};
-
-    // Obtener datos de profesionales
-    const professionalPromises = usersData.map(async user => {
-        const professionalSnapshot = await db.collection('users').doc(user.id).collection('professionalData').doc('data').get();
-        return professionalSnapshot.exists ? professionalSnapshot.data() : null;
-    });
-
-    const professionals = await Promise.all(professionalPromises);
-
-    // Procesar los datos de los profesionales
-    professionals.forEach(professionalData => {
-        if (professionalData) {
-            const professionalCreatedAt = professionalData.createdAt;
-            const city = professionalData.city;
-
-            // Filtrar por rango de fechas
-            if ((!startDate && !endDate) || (professionalCreatedAt && professionalCreatedAt.toDate() >= startDate && professionalCreatedAt.toDate() <= endDate)) {
-                totalProfessionals++;
-
-                // Contar subcategorías
-                (professionalData.skills || []).forEach(skill => {
-                    subcategoryCount[skill] = (subcategoryCount[skill] || 0) + 1;
-                });
-
-                // Contar profesionales en la ciudad
-                if (city) {
-                    cityCount[city] = (cityCount[city] || 0) + 1;
-                }
-            }
-        }
-    });
-
-    // Consulta de tickets (filtrada por fechas si existen)
-    let ticketsQuery = db.collection('tickets');
-    if (startDate && endDate) {
-        ticketsQuery = ticketsQuery.where('createdAt', '>=', startDate).where('createdAt', '<=', endDate);
-    }
-
-    const ticketsSnapshot = await ticketsQuery.get();
-    const totalTickets = ticketsSnapshot.size;
-
-    // Contar categorías y estados
-    ticketsSnapshot.docs.forEach(ticketDoc => {
-        const ticketData = ticketDoc.data();
-
-        (ticketData.tags || []).forEach(tag => {
-            categoryCount[tag] = (categoryCount[tag] || 0) + 1;
-        });
-
-        const state = ticketData.state;
-        stateCount[state] = (stateCount[state] || 0) + 1;
-    });
-
-    // Preparar métricas para las tarjetas
-    const metrics = [
-        {
-            title_card: 'Usuarios Registrados',
-            value: totalUsers,
-            description: startDate && endDate ? `Usuarios registrados del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Usuarios totales registrados'
-        },
-        {
-            title_card: 'Profesionales Registrados',
-            value: totalProfessionals,
-            description: startDate && endDate ? `Profesionales registrados del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Profesionales totales registrados'
-        },
-        {
-            title_card: 'Tickets Creados',
-            value: totalTickets,
-            description: startDate && endDate ? `Tickets creados del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Total de tickets creados'
-        }
-    ];
-
-    // Generar el PDF y enviar como respuesta
-    await exportDashboardToPDF(metrics, stateCount, categoryCount, cityCount);
-
-    res.download('dashboard-report.pdf', 'dashboard-report.pdf', (err) => {
-        if (err) {
-            console.error("Error al descargar el archivo PDF:", err);
-        } else {
-            fs.unlinkSync('dashboard-report.pdf'); // Eliminar el archivo PDF después de la descarga
-        }
-    });
-});
-
-
-
-
-
+router.get('/pdf', async (req, res) => {res.render('inform')});
 
 module.exports = router;

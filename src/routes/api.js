@@ -8,7 +8,8 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 router.post('/tags_jobs', async (req, res) => {
     const docId = req.body.id;
-    console.log(docId);
+   // console.log(docId);
+    
     if (!docId) {
         return res.status(400).json({ error: 'ID del documento no proporcionado' });
     }
@@ -27,6 +28,7 @@ router.post('/tags_jobs', async (req, res) => {
             }
         });
 
+       // console.log(subcategories);
         // Obtener el ticket del ID proporcionado
         const doc = await db.collection('tickets').doc(docId).get();
         if (!doc.exists) {
@@ -42,7 +44,7 @@ router.post('/tags_jobs', async (req, res) => {
 
         // Definir el prompt para la IA
         const prompt = `
-        Dada la siguiente descripción: "${descripcion}", y esta lista de etiquetas: [${subcategories.join(', ')}], selecciona solo las etiquetas más relevantes para la descripción, separadas por coma. Si no encuentras ninguna relación, coloca "Sin etiqueta"`;
+    Dada la descripción: "${descripcion}", y la lista de etiquetas: [${subcategories.join(', ')}], selecciona solo las etiquetas que tengan una relación lógica y directa con la descripción proporcionada. Devuelve únicamente las etiquetas relevantes, separadas por coma. Si ninguna etiqueta es relevante, responde con "Sin etiqueta".`;
 
         // Llamada a la API para generar contenido
     
