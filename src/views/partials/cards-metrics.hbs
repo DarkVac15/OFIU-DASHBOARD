@@ -34,7 +34,11 @@
         <h2> Profesionales por Ciudad</h2>
         <canvas id="cityChart" width="400" height="200"></canvas>
     </div>
-
+    <!-- Agrega un lienzo para el gráfico -->
+    <div class="col-md-4 text-white bg-dark">
+     <h2> Distribución de Profesionales por Categoría </h2>
+<canvas id="professionalsPieChart"></canvas>
+</div>
 </div>
 
 <div class="row">
@@ -76,7 +80,46 @@
     }
 </style>
 
+
 <script>
+ // Recupera los datos enviados desde el backend
+   // Configuración del gráfico de pastel
+  const ctxpastel = document.getElementById('professionalsPieChart').getContext('2d');
+  new Chart(ctxpastel, {
+    type: 'pie',
+    data: {
+     // Las categorías como etiquetas
+       labels: JSON.parse('{{{labelCategoryProf}}}'),
+      datasets: [{
+      //  data: counts, // Los valores correspondientes
+         data: JSON.parse('{{{valueProf}}}'),
+        backgroundColor: [
+          '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', 
+          '#FF9F40', '#E7E9ED', '#FFC0CB', '#00FA9A', '#FFD700'
+        ], // Colores de cada porción
+        borderColor: '#ffffff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'right'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(tooltipItem) {
+              const label = tooltipItem.label || '';
+              const value = tooltipItem.raw;
+              return `${label}: ${value} profesionales`;
+            }
+          }
+        }
+      }
+    }
+  });
+
 
     // Coordenadas de las ciudades
     const citiesCoordinates = {

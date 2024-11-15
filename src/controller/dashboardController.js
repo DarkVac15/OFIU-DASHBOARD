@@ -1,4 +1,5 @@
 const { db, auth } = require("../config/firebase");
+const puppeteer = require('puppeteer');
 
 exports.dataDashboard = async (req, res) => {
 
@@ -16,13 +17,7 @@ exports.dataDashboard = async (req, res) => {
         endDate.setHours(endDate.getHours() - 5); // Ajustar la fecha de fin
     }
 
-    // Obtener las categorías desde Firestore
-    const tagsSnapshot = await db.collection('tags').get();
-    const tagToCategory = {};
 
-    tagsSnapshot.forEach(doc => {
-        const data = doc.data();
-    });
 
     let usersQuery = db.collection('users');
     if (startDate && endDate) {
@@ -90,7 +85,9 @@ exports.dataDashboard = async (req, res) => {
     let totalUsers = usersData.length;
     let totalProfessionals = 0;
     let subcategoryCount = {};
+    let subcategoryToCategoryProf = {};
     let categoryCount = {};
+    let categoryCountProf = {};
     let stateCount = {};
     let cityCount = {};
     let totalTickets = 0;
@@ -109,6 +106,7 @@ exports.dataDashboard = async (req, res) => {
             subcategoryToCategory[subcategory] = categoryId;
             if (!categoryCount[categoryId]) {
                 categoryCount[categoryId] = 0;
+
             }
         });
     });
@@ -124,7 +122,15 @@ exports.dataDashboard = async (req, res) => {
             totalProfessionals++;
 
             (professionalData.skills || []).forEach(skill => {
-                subcategoryCount[skill] = (subcategoryCount[skill] || 0) + 1;
+
+                subcategoryToCategoryProf[skill] = (subcategoryToCategoryProf[skill] || 0) + 1;
+
+                // Determinar la categoría principal asociada
+                const category = subcategoryToCategory[skill];
+                if (category) {
+                    categoryCountProf[category] = (categoryCountProf[category] || 0) + 1;
+                }
+
             });
 
             if (city) {
@@ -133,28 +139,23 @@ exports.dataDashboard = async (req, res) => {
         }
     });
 
+    //console.log("Profesionales por subcategoría:", subcategoryToCategoryProf);
+    //console.log("Profesionales por categoría:", categoryCountProf);
+
     // Obtener tickets
     const ticketsSnapshot = await db.collection('tickets').get();
     const countedCategories = new Set();
     const ticketsByDate1 = {};
     ticketsSnapshot.forEach(ticketDoc => {
         const ticketData = ticketDoc.data();
-
         const ticketCreatedAt = ticketData.createdAt.toDate();
         const formattedDate = ticketCreatedAt.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' }); // 'YYYY-MM-DD'
-
-
         if ((!startDate && !endDate) || (ticketCreatedAt >= startDate && ticketCreatedAt <= endDate)) {
-
-
             if (!ticketsByDate1[formattedDate]) {
                 ticketsByDate1[formattedDate] = 1;
             } else {
                 ticketsByDate1[formattedDate] += 1;
             }
-
-
-
             totalTickets++;
             (ticketData.tags || []).forEach(tag => {
                 const category = subcategoryToCategory[tag];
@@ -163,12 +164,10 @@ exports.dataDashboard = async (req, res) => {
                     countedCategories.add(category);
                 }
             });
-
             const state = ticketData.state;
             if (state) {
                 stateCount[state] = (stateCount[state] || 0) + 1;
             }
-
             const location = ticketData.cityTicket;
             if (state === "Abierto" && location) {
                 locationCount[location] = (locationCount[location] || 0) + 1;
@@ -207,6 +206,9 @@ exports.dataDashboard = async (req, res) => {
 
     const filteredCityCount = filterData(cityCount);
     const filteredLocationCount = filterData(locationCount);
+
+
+ 
 
     const metrics = [
         {
@@ -256,11 +258,14 @@ exports.dataDashboard = async (req, res) => {
         ticketTrendData: jsonify(ticketTrendData),
 
         locationChartLabels: jsonify(Object.keys(filteredLocationCount)),
-        locationChartData: jsonify(Object.values(filteredLocationCount))
+        locationChartData: jsonify(Object.values(filteredLocationCount)),
+
+        labelCategoryProf: jsonify(Object.keys(categoryCountProf)),
+        valueProf: jsonify(Object.values(categoryCountProf))
+
     });
 };
-const fs = require('fs');
-const puppeteer = require('puppeteer');
+
 
 exports.dataReports = async (req, res) => {
     // Ajustar startDate y endDate a la zona horaria de Bogotá (UTC-5)
@@ -351,6 +356,11 @@ exports.dataReports = async (req, res) => {
         const city = professionalData.city;
         totalProfessionals++;
 
+
+
+
+        
+
         (professionalData.skills || []).forEach(skill => {
             categoryCount[skill] = (categoryCount[skill] || 0) + 1;
         });
@@ -408,15 +418,11 @@ exports.dataReports = async (req, res) => {
 
             });
 
-
             if (!ticketsByDate1[formattedDate]) {
                 ticketsByDate1[formattedDate] = 1;
             } else {
                 ticketsByDate1[formattedDate] += 1;
             }
-
-
-
 
         }
     });
@@ -461,14 +467,15 @@ exports.dataReports = async (req, res) => {
     const jsonify = (data) => JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
     //uso de la ia metodo
 
-   const message = await getGreeting(
+    const message = await getGreeting(
         fechaActual, totalUsers, totalProfessionals, totalTickets, totalDisabledUsers, startDate ? startDate.toISOString().split('T')[0] : null, endDate ? endDate.toISOString().split('T')[0] : null,
         filteredStateCount, data_etiquetas_ticket, filteredLocationCountTicket, filteredCityCountProfesional,
         data_ticket_city, jsonify(userTrendLabels), jsonify(userTrendData),
         jsonify(professionalTrendLabels), jsonify(professionalTrendData), jsonify(ticketTrendLabels),
         jsonify(ticketTrendData)
     );
-    //const message ="";
+    
+    //const message = "";
     const messageString = String(message);
     //console.log(messageString)
 
@@ -476,9 +483,9 @@ exports.dataReports = async (req, res) => {
     const regex = /\*\*Hallazgos:\*\*([\s\S]+?)\n\n\*\*Recomendaciones:\*\*([\s\S]+?)\n\n\*\*Perspectivas futuras:\*\*([\s\S]+?)(?:\n\n|$)/;
     // Aplicamos la expresión regular sobre la respuesta
     const matches = messageString.match(regex);
-    let formattedHallazgos="No se encontraron hallazgos.";
-    let formattedRecomendaciones="No se encontraron recomendaciones.";
-    let formattedPerspectivasFuturas="No se encontraron perspectivas futuras.";
+    let formattedHallazgos = "No se encontraron hallazgos.";
+    let formattedRecomendaciones = "No se encontraron recomendaciones.";
+    let formattedPerspectivasFuturas = "No se encontraron perspectivas futuras.";
 
     let hallazgos = "No se encontraron hallazgos.";
     let recomendaciones = "No se encontraron recomendaciones.";
@@ -490,10 +497,10 @@ exports.dataReports = async (req, res) => {
             .replace(/\* /g, '')           // Reemplaza asteriscos al inicio de línea con guiones para la lista
             .trim();                         // Elimina espacios adicionales al inicio y al final
     }
-  
+
     // Comprobamos si la respuesta contiene los apartados correctamente
     if (matches) {
-        
+
         hallazgos = formatText(matches[1].trim());
         formattedHallazgos = hallazgos.split('\n').map(item => `<li>${item.replace(/^• /, '')}</li>`).join('');
 
@@ -503,14 +510,13 @@ exports.dataReports = async (req, res) => {
 
         perspectivasFuturas = formatText(matches[3].trim());
         formattedPerspectivasFuturas = perspectivasFuturas.split('\n').map(item => `<li>${item.replace(/^• /, '')}</li>`).join('');
-       
+
         // Mostramos las secciones por separado
 
     } else {
         console.log("No se pudo separar el texto correctamente.");
-       // console.log(matches)
+        // console.log(matches)
     }
-
 
     //envio de datos a la vista
     res.render('inform', {
@@ -538,34 +544,59 @@ exports.dataReports = async (req, res) => {
         formattedPerspectivasFuturas
 
     });
-   // run();
+
+
+};
+
+//const puppeteer = require('puppeteer');
+exports.generatePDF = async (req, res) => {
+
+    try {
+        const { startDate, endDate } = req.query;
+        // URL de la página que deseas imprimir, en este caso la ruta de 'inform'
+        const url = startDate && endDate
+            ? `http://localhost:3000/dashboard/export-pdf?startDate=${startDate}&endDate=${endDate}`
+            : `http://localhost:3000/dashboard/export-pdf`; // URL sin parámetros si no se pasan fechas
+
+        // Iniciar Puppeteer
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+
+        // Navegar a la URL de la página de la cual deseas hacer el PDF
+        await page.goto(url, { waitUntil: 'networkidle0' });
+
+        // Generar el PDF
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true, // Para incluir el fondo y los estilos de la página
+            margin: { top: '1cm', bottom: '1cm', left: '1cm', right: '1cm' },
+        });
+
+        // Cerrar el navegador
+        await browser.close();
+
+        // Enviar el PDF como respuesta para que el navegador lo descargue
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename="informe.pdf"');
+        res.setHeader('Content-Length', pdfBuffer.length);
+
+        res.end(pdfBuffer);
+    } catch (error) {
+        console.error("Error generando el PDF:", error);
+        res.status(500).send("Hubo un error al generar el PDF.");
+    }
 };
 
 
 
-async function run() {
-    let html = fs.readFileSync('./src/views/inform.hbs', 'utf8');
-    let browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    let page = await browser.newPage();
-    await page.setContent(html);
-    await page.pdf({path: './index.pdf', format: 'A4', printBackground: true});
-    await browser.close();
-}
+
 
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-
-
 async function getGreeting(fechaActual, totalUsers, totalProfessionals, totalTickets, totalDisabledUsers, startDate, endDate, filteredStateCount, data_etiquetas_ticket, data_ticket_city, filteredCityCountProfesional, filteredLocationCountTicket, userTrendLabels, userTrendData, professionalTrendLabels, professionalTrendData, ticketTrendLabels, ticketTrendData) {
     //console.log(fechaActual)
-
-
     const genAI = new GoogleGenerativeAI(process.env.API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
     // Definir el prompt para la IA
     const prompt = `
    Estos son los datos del informe:
@@ -577,20 +608,13 @@ async function getGreeting(fechaActual, totalUsers, totalProfessionals, totalTic
    - Rangos de fecha: desde ${startDate} hasta ${endDate}
    - Estados de tickets: ${JSON.stringify(filteredStateCount)}
    - Etiquetas de ticket por categoría: ${JSON.stringify(data_etiquetas_ticket)}
-
    - Tickets por ubicación: ${JSON.stringify(data_ticket_city)}
-
    - Profesionales por ciudad: ${JSON.stringify(filteredCityCountProfesional)}
-
    Proporciona hallazgos, recomendaciones y perspectivas futuras basadas en estos datos, y después de cada punto coloca "\n"
  `;
     // Llamada a la API para generar contenido
-//console.log(prompt)
+
     const result = await model.generateContent(prompt);
-   const responseText = result.response.candidates[0]?.content.parts[0]?.text || "Sin etiqueta";
-
-    // console.log(responseText)
-
+    const responseText = result.response.candidates[0]?.content.parts[0]?.text || "Sin etiqueta";
     return (responseText);
-
 }
