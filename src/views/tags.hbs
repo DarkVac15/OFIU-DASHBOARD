@@ -11,7 +11,7 @@
             <th scope="col">#</th>
             <th scope="col">Categoría</th>
             <th scope="col">Subcategoría</th>
-            <th scope="col">Descripción</th>
+          
             <th scope="col">Imagen</th>
             <th scope="col">Acciones</th>
         </tr>
@@ -21,14 +21,14 @@
         <tr>
             <th scope="row">{{@index}}</th>
             <td>{{this.category}}</td>
-            <td>{{this.subcategory}}</td>
+           
             <td>{{this.description}}</td>
             <td><img src="{{this.image}}" alt="{{this.subcategory}}" style="width: 50px;"></td>
             <td>
                 <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#agregarSubcategoriaModal"
                     onclick="setCategoriaId('{{this.category}}')">Agregar Subcategoría</button>
                 <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
-                    onclick="setSubcategoriaId('{{this.category}}', '{{this.subcategory}}')">Eliminar</button>
+                    onclick="setSubcategoriaId('{{this.category}}', '{{this.subcategory}}','{{ this.description }}')">Eliminar</button>
             </td>
         </tr>
         {{else}}
@@ -81,10 +81,7 @@
                         <label for="subcategoria" class="form-label">Nombre de la Subcategoría</label>
                         <input type="text" class="form-control" id="subcategoria" name="subcategoria" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="descripcion" class="form-label">Descripción</label>
-                        <textarea class="form-control" id="descripcion" name="descripcion" required></textarea>
-                    </div>
+                    
                     <div class="mb-3">
                         <label for="imagen" class="form-label">Subir Imagen</label>
                         <input type="file" class="form-control" id="imagen" name="imagen" required>
@@ -118,16 +115,8 @@
 
 
 
-
-
-
-
-
-
-
-
-
 <script type="module">
+
     import { ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
     // Hacer que la función sea global
     window.setCategoriaId = function (categoriaId) {
@@ -234,11 +223,13 @@
     // Variables para almacenar el ID de la categoría y subcategoría a eliminar
     let categoryIdToDelete = null;
     let subcategoryIdToDelete = null;
+    let subcategoryIdToName = null;
 
     // Función para establecer los IDs de categoría y subcategoría a eliminar
-    window.setSubcategoriaId = function (categoryId, subcategoryId) {
+    window.setSubcategoriaId = function (categoryId, subcategoryId,description) {
         categoryIdToDelete = categoryId; // ID de la categoría (ej. 'construccion')
         subcategoryIdToDelete = subcategoryId; // ID de la subcategoría (ej. 'carpinteria')
+        subcategoryIdToName= description;
     };
 
     // Evento para manejar el clic en el botón de eliminar
@@ -247,7 +238,7 @@
 
         if (subcategoryIdToDelete && categoryIdToDelete) {
 
-            const imagePath = `images/category/${categoryIdToDelete}/${subcategoryIdToDelete}.jpg`; // Ajusta la extensión según sea necesario
+            const imagePath = `images/category/${categoryIdToDelete}/${subcategoryIdToName}.jpg`; // Ajusta la extensión según sea necesario
             const imageRef = ref(window.firebaseStorage, imagePath);
 
             try {

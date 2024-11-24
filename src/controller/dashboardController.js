@@ -1,7 +1,17 @@
 const { db, auth } = require("../config/firebase");
 const puppeteer = require('puppeteer');
 
+
 exports.dataDashboard = async (req, res) => {
+
+    let totalProfessionals = 0;
+    let categoryCount = {};
+
+    let stateCount = {};
+    let cityCount = {};
+    let totalTickets = 0;
+    let locationCount = {};
+    // let totalUsers = 0;
 
     // Ajustar startDate y endDate a la zona horaria de Bogotá (UTC-5)
     // Obtén las fechas del query string
@@ -17,6 +27,21 @@ exports.dataDashboard = async (req, res) => {
         endDate.setHours(endDate.getHours() - 5); // Ajustar la fecha de fin
     }
 
+    const categoriesSnapshot = await db.collection('category').get(); // Obtener todas las categorías
+    const categoriasConSubcategorias = []; // Array para almacenar las categorías con sus subcategorías
+    for (const categoryDoc of categoriesSnapshot.docs) {
+        const categoryId = categoryDoc.id; // ID de la categoría
+        const categoryData = categoryDoc.data(); // Datos de la categoría
+        // Obtener las subcategorías de la categoría actual
+        const subcategoriesSnapshot = await db.collection(`category/${categoryId}/subcategories`).get();
+        const subcategoryTitles = subcategoriesSnapshot.docs.map(subDoc => subDoc.data().title); // Extraer solo los títulos
+        // Agregar categoría con sus subcategorías al array
+        categoriasConSubcategorias.push({
+            categoria: categoryData.name, // Nombre de la categoría
+            subcategories: subcategoryTitles, // Array de títulos de subcategorías
+        });
+    }
+    console.log(categoriasConSubcategorias)
 
 
     let usersQuery = db.collection('users');
@@ -50,7 +75,7 @@ exports.dataDashboard = async (req, res) => {
 
     const { labels: userTrendLabels, data: userTrendData } = getUsersByDateRange(usersData);
 
-    // Obtener profesionales en la nueva colección "professionals"
+    //Obtener profesionales en la nueva colección "professionals"
     const getProfessionalsByDateRange = async () => {
         const professionalsByDate = {};
 
@@ -83,33 +108,9 @@ exports.dataDashboard = async (req, res) => {
     const { labels: professionalTrendLabels, data: professionalTrendData } = await getProfessionalsByDateRange();
 
     let totalUsers = usersData.length;
-    let totalProfessionals = 0;
-    let subcategoryCount = {};
-    let subcategoryToCategoryProf = {};
-    let categoryCount = {};
-    let categoryCountProf = {};
-    let stateCount = {};
-    let cityCount = {};
-    let totalTickets = 0;
-    let locationCount = {};
 
-    const categoriesSnapshot = await db.collection('category').get();
-    const categories = categoriesSnapshot.docs;
+    let subcategoryCount = {};  // Objeto para contar la cantidad de profesionales por subcategoría
 
-    const subcategoryToCategory = {};
-
-    categories.forEach(doc => {
-        const categoryId = doc.id;
-        const subcategoryMap = doc.data();
-
-        Object.keys(subcategoryMap).forEach(subcategory => {
-            subcategoryToCategory[subcategory] = categoryId;
-            if (!categoryCount[categoryId]) {
-                categoryCount[categoryId] = 0;
-
-            }
-        });
-    });
 
     // Contar profesionales desde la nueva colección "professionals"
     const professionalsSnapshot = await db.collection('professionals').get();
@@ -117,39 +118,37 @@ exports.dataDashboard = async (req, res) => {
         const professionalData = doc.data();
         const professionalCreatedAt = professionalData.createdAt;
         const city = professionalData.city;
+        const skills = professionalData.skills;  // Aquí es donde están las subcategorías
 
         if ((!startDate && !endDate) || (professionalCreatedAt && professionalCreatedAt.toDate() >= startDate && professionalCreatedAt.toDate() <= endDate)) {
             totalProfessionals++;
 
-            (professionalData.skills || []).forEach(skill => {
-
-                subcategoryToCategoryProf[skill] = (subcategoryToCategoryProf[skill] || 0) + 1;
-
-                // Determinar la categoría principal asociada
-                const category = subcategoryToCategory[skill];
-                if (category) {
-                    categoryCountProf[category] = (categoryCountProf[category] || 0) + 1;
-                }
-
-            });
-
+            // Contar las subcategorías en el array skills
+            if (skills && Array.isArray(skills)) {
+                skills.forEach(subcategory => {
+                    subcategoryCount[subcategory] = (subcategoryCount[subcategory] || 0) + 1;
+                });
+            }
             if (city) {
                 cityCount[city] = (cityCount[city] || 0) + 1;
             }
         }
+
     });
 
-    //console.log("Profesionales por subcategoría:", subcategoryToCategoryProf);
-    //console.log("Profesionales por categoría:", categoryCountProf);
 
-    // Obtener tickets
+    // Ahora tienes los conteos de subcategorías en el objeto subcategoryCount
+    //console.log(subcategoryCount); // Imprime el resultado o lo puedes devolver com
+
     const ticketsSnapshot = await db.collection('tickets').get();
-    const countedCategories = new Set();
+
     const ticketsByDate1 = {};
+
     ticketsSnapshot.forEach(ticketDoc => {
         const ticketData = ticketDoc.data();
         const ticketCreatedAt = ticketData.createdAt.toDate();
         const formattedDate = ticketCreatedAt.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' }); // 'YYYY-MM-DD'
+
         if ((!startDate && !endDate) || (ticketCreatedAt >= startDate && ticketCreatedAt <= endDate)) {
             if (!ticketsByDate1[formattedDate]) {
                 ticketsByDate1[formattedDate] = 1;
@@ -157,13 +156,7 @@ exports.dataDashboard = async (req, res) => {
                 ticketsByDate1[formattedDate] += 1;
             }
             totalTickets++;
-            (ticketData.tags || []).forEach(tag => {
-                const category = subcategoryToCategory[tag];
-                if (category && !countedCategories.has(category)) {
-                    categoryCount[category] = (categoryCount[category] || 0) + 1;
-                    countedCategories.add(category);
-                }
-            });
+
             const state = ticketData.state;
             if (state) {
                 stateCount[state] = (stateCount[state] || 0) + 1;
@@ -172,12 +165,23 @@ exports.dataDashboard = async (req, res) => {
             if (state === "Abierto" && location) {
                 locationCount[location] = (locationCount[location] || 0) + 1;
             }
+            // Contar las categorías (subcategorías) dentro de 'tags'
+            const tags = ticketData.tags;
+            if (tags && Array.isArray(tags)) {
+                tags.forEach(tag => {
+                    categoryCount[tag] = (categoryCount[tag] || 0) + 1;
+                });
+
+            }
+
+
         }
 
     });
     const sortedDates = Object.keys(ticketsByDate1).sort();
     const ticketTrendLabels = sortedDates;
     const ticketTrendData = sortedDates.map(date => ticketsByDate1[date]);
+
     // Consultar usuarios inhabilitados desde Firebase Auth
     const listAllUsers = async (nextPageToken) => {
         const result = await auth.listUsers(1000, nextPageToken);
@@ -203,12 +207,9 @@ exports.dataDashboard = async (req, res) => {
 
     const filteredCategoryCount = filterData(categoryCount);
     const filteredStateCount = filterData(stateCount);
-
     const filteredCityCount = filterData(cityCount);
     const filteredLocationCount = filterData(locationCount);
 
-
- 
 
     const metrics = [
         {
@@ -232,10 +233,7 @@ exports.dataDashboard = async (req, res) => {
             description: 'Total de usuarios inhabilitados'
         }
     ];
-
     const jsonify = (data) => JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
-    console.log('Categorías filtradas:', filteredCategoryCount);
-
     res.render('dashboard', {
         metrics,
         layout: 'main',
@@ -248,21 +246,16 @@ exports.dataDashboard = async (req, res) => {
         categoryChartData: jsonify(Object.values(filteredCategoryCount)),
         cityChartLabels: jsonify(Object.keys(filteredCityCount)),
         cityChartData: jsonify(Object.values(filteredCityCount)),
-
         userTrendLabels: jsonify(userTrendLabels),
         userTrendData: jsonify(userTrendData),
-
         professionalTrendLabels: jsonify(professionalTrendLabels), // Convierte a JSON
         professionalTrendData: jsonify(professionalTrendData),   // Convierte a JSON
         ticketTrendLabels: jsonify(ticketTrendLabels),
         ticketTrendData: jsonify(ticketTrendData),
-
         locationChartLabels: jsonify(Object.keys(filteredLocationCount)),
         locationChartData: jsonify(Object.values(filteredLocationCount)),
-
-        labelCategoryProf: jsonify(Object.keys(categoryCountProf)),
-        valueProf: jsonify(Object.values(categoryCountProf))
-
+        labelCategoryProf: jsonify(Object.keys(subcategoryCount)),
+        valueProf: jsonify(Object.values(subcategoryCount))
     });
 };
 
@@ -281,12 +274,21 @@ exports.dataReports = async (req, res) => {
     }
 
     // Obtener las categorías desde Firestore
-    const tagsSnapshot = await db.collection('tags').get();
-    const tagToCategory = {};
-    tagsSnapshot.forEach(doc => {
-        const data = doc.data();
-        tagToCategory[doc.id] = data;
-    });
+    categoriesSnapshot = await db.collection('category').get(); // Obtener todas las categorías
+    const categoriasConSubcategorias = []; // Array para almacenar las categorías con sus subcategorías
+    for (const categoryDoc of categoriesSnapshot.docs) {
+        const categoryId = categoryDoc.id; // ID de la categoría
+        const categoryData = categoryDoc.data(); // Datos de la categoría
+        // Obtener las subcategorías de la categoría actual
+        const subcategoriesSnapshot = await db.collection(`category/${categoryId}/subcategories`).get();
+        const subcategoryTitles = subcategoriesSnapshot.docs.map(subDoc => subDoc.data().title); // Extraer solo los títulos
+        // Agregar categoría con sus subcategorías al array
+        categoriasConSubcategorias.push({
+            categoria: categoryData.name, // Nombre de la categoría
+            subcategories: subcategoryTitles, // Array de títulos de subcategorías
+        });
+    }
+
 
     let usersQuery = db.collection('users');
     if (startDate && endDate) {
@@ -332,35 +334,25 @@ exports.dataReports = async (req, res) => {
                 }
             }
         });
-
         const sortedDates = Object.keys(professionalsByDate).sort();
         const labels = sortedDates;
         const data = sortedDates.map(date => professionalsByDate[date]);
 
         return { labels, data };
     };
-
     const { labels: professionalTrendLabels, data: professionalTrendData } = await getProfessionalsByDateRange();
-
     let totalUsers = usersData.length;
     let totalProfessionals = 0;
     let categoryCount = {};
     let stateCount = {};
     let cityCount = {};
     let totalTickets = 0;
-
     // Contar profesionales
     const professionalsSnapshot = await db.collection('professionals').get();
     professionalsSnapshot.forEach(doc => {
         const professionalData = doc.data();
         const city = professionalData.city;
         totalProfessionals++;
-
-
-
-
-        
-
         (professionalData.skills || []).forEach(skill => {
             categoryCount[skill] = (categoryCount[skill] || 0) + 1;
         });
@@ -372,24 +364,10 @@ exports.dataReports = async (req, res) => {
 
     // Obtener tickets
     const cityCount1 = {}
-    const categoriesSnapshot = await db.collection('category').get();
-    const categories = categoriesSnapshot.docs;
-    const subcategoryToCategory = {};
-    categories.forEach(doc => {
-        const categoryId = doc.id;
-        const subcategoryMap = doc.data();
-
-        Object.keys(subcategoryMap).forEach(subcategory => {
-            subcategoryToCategory[subcategory] = categoryId;
-            if (!categoryCount[categoryId]) {
-                categoryCount[categoryId] = 0;
-            }
-        });
-    });
-
+    categoriasConSubcategorias
     const categoryCount1 = {};
     const ticketsByDate1 = {};
-    const countedCategories = new Set();
+
     const ticketsSnapshot = await db.collection('tickets').get();
     ticketsSnapshot.forEach(ticketDoc => {
         const ticketData = ticketDoc.data();
@@ -397,6 +375,12 @@ exports.dataReports = async (req, res) => {
         const formattedDate = ticketCreatedAt.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' }); // 'YYYY-MM-DD'
         // Validar el rango de fechas
         if ((!startDate && !endDate) || (ticketCreatedAt >= startDate && ticketCreatedAt <= endDate)) {
+
+            if (!ticketsByDate1[formattedDate]) {
+                ticketsByDate1[formattedDate] = 1;
+            } else {
+                ticketsByDate1[formattedDate] += 1;
+            }
             totalTickets++;
             // Contar el estado de los tickets
             const state = ticketData.state;
@@ -408,22 +392,13 @@ exports.dataReports = async (req, res) => {
             if (state === "Abierto" && location) {
                 cityCount1[location] = (cityCount1[location] || 0) + 1;
             }
+            const tags = ticketData.tags;
+            if (tags && Array.isArray(tags)) {
+                tags.forEach(tag => {
+                    categoryCount1[tag] = (categoryCount1[tag] || 0) + 1;
+                });
 
-            (ticketData.tags || []).forEach(tag => {
-                const category = subcategoryToCategory[tag];
-                if (category && !countedCategories.has(category)) {
-                    categoryCount1[category] = (categoryCount1[category] || 0) + 1;
-                    countedCategories.add(category);
-                }
-
-            });
-
-            if (!ticketsByDate1[formattedDate]) {
-                ticketsByDate1[formattedDate] = 1;
-            } else {
-                ticketsByDate1[formattedDate] += 1;
             }
-
         }
     });
 
@@ -474,51 +449,37 @@ exports.dataReports = async (req, res) => {
         jsonify(professionalTrendLabels), jsonify(professionalTrendData), jsonify(ticketTrendLabels),
         jsonify(ticketTrendData)
     );
-    
+
     //const message = "";
     const messageString = String(message);
-    //console.log(messageString)
+    //console.log("mensaje " + messageString)
+    const sections = splitByTitles(messageString);
 
-    // Modificar la expresión regular para buscar los apartados según el formato real de tu texto
-    const regex = /\*\*Hallazgos:\*\*([\s\S]+?)\n\n\*\*Recomendaciones:\*\*([\s\S]+?)\n\n\*\*Perspectivas futuras:\*\*([\s\S]+?)(?:\n\n|$)/;
-    // Aplicamos la expresión regular sobre la respuesta
-    const matches = messageString.match(regex);
-    let formattedHallazgos = "No se encontraron hallazgos.";
-    let formattedRecomendaciones = "No se encontraron recomendaciones.";
-    let formattedPerspectivasFuturas = "No se encontraron perspectivas futuras.";
+    // Transformar el texto a una lista HTML
+    
+    console.log(sections)
+    let p1 = sections["Hallazgos"];
+    
+    let p2 = sections["Recomendaciones"];
+    let p3 = sections["Perspectivas futuras"];
 
-    let hallazgos = "No se encontraron hallazgos.";
-    let recomendaciones = "No se encontraron recomendaciones.";
-    let perspectivasFuturas = "No se encontraron perspectivas futuras.";
-
-    function formatText(text) {
-        return text
-            .replace(/\*\*/g, '')           // Elimina los asteriscos dobles usados para negrita
-            .replace(/\* /g, '')           // Reemplaza asteriscos al inicio de línea con guiones para la lista
-            .trim();                         // Elimina espacios adicionales al inicio y al final
-    }
-
-    // Comprobamos si la respuesta contiene los apartados correctamente
-    if (matches) {
-
-        hallazgos = formatText(matches[1].trim());
-        formattedHallazgos = hallazgos.split('\n').map(item => `<li>${item.replace(/^• /, '')}</li>`).join('');
-
-        recomendaciones = formatText(matches[2].trim());
-        formattedRecomendaciones = recomendaciones.split('\n').map(item => `<li>${item.replace(/^• /, '')}</li>`).join('');
-        //recomendaciones = formatText(recomendaciones);
-
-        perspectivasFuturas = formatText(matches[3].trim());
-        formattedPerspectivasFuturas = perspectivasFuturas.split('\n').map(item => `<li>${item.replace(/^• /, '')}</li>`).join('');
-
-        // Mostramos las secciones por separado
-
-    } else {
-        console.log("No se pudo separar el texto correctamente.");
-        // console.log(matches)
-    }
-
-    //envio de datos a la vista
+    const formattedHallazgos = p1
+        .split('*') // Dividir por el asterisco inicial
+        .filter(item => item.trim() !== '') // Eliminar elementos vacíos
+        .map(item => `<li>${item.trim()}</li>`) // Envolver cada ítem en <li>
+        .join(''); // Unir todo como cadena
+    const formattedRecomendaciones =p2
+        .split('*') // Dividir por el asterisco inicial
+        .filter(item => item.trim() !== '') // Eliminar elementos vacíos
+        .map(item => `<li>${item.trim()}</li>`) // Envolver cada ítem en <li>
+        .join(''); // Unir todo como cadena
+    const formattedPerspectivasFuturas = p3
+        .split('*') // Dividir por el asterisco inicial
+        .filter(item => item.trim() !== '') // Eliminar elementos vacíos
+        .map(item => `<li>${item.trim()}</li>`) // Envolver cada ítem en <li>
+        .join(''); // Unir todo como cadena = sections["Recomendaciones"]
+        
+        //envio de datos a la vista
     res.render('inform', {
         fechaActual,
         totalUsers,//total usuarios
@@ -548,6 +509,42 @@ exports.dataReports = async (req, res) => {
 
 };
 
+
+
+// Función para dividir el texto por títulos
+function splitByTitles(text) {
+    //console.log("aaaa" + text)
+    // Expresión regular para encontrar los títulos (entre doble asterisco **)
+    const titleRegex = /\*\*(.+?):\*\*/g;
+    let sections = {};
+    let lastIndex = 0;
+    let match;
+    let lastTitle = null;
+
+    while ((match = titleRegex.exec(text)) !== null) {
+        const title = match[1].trim(); // Obtener el título
+        const start = match.index;
+
+        // Si hay un título anterior, guardamos su contenido
+        if (lastTitle) {
+            sections[lastTitle] = text.slice(lastIndex, start).trim();
+        }
+
+        // Actualizar el último índice y título
+        lastIndex = titleRegex.lastIndex;
+        lastTitle = title;
+    }
+
+    // Agregar el contenido de la última sección
+    if (lastTitle) {
+        sections[lastTitle] = text.slice(lastIndex).trim();
+    }
+
+    // console.log("pruea" + sections["Hallazgos"])
+    return sections;
+}
+
+
 //const puppeteer = require('puppeteer');
 exports.generatePDF = async (req, res) => {
 
@@ -563,7 +560,7 @@ exports.generatePDF = async (req, res) => {
         const page = await browser.newPage();
 
         // Navegar a la URL de la página de la cual deseas hacer el PDF
-        await page.goto(url, { waitUntil: 'networkidle0' });
+        await page.goto(url, { waitUntil: 'networkidle0', timeout: 60000 });
 
         // Generar el PDF
         const pdfBuffer = await page.pdf({
@@ -615,6 +612,9 @@ async function getGreeting(fechaActual, totalUsers, totalProfessionals, totalTic
     // Llamada a la API para generar contenido
 
     const result = await model.generateContent(prompt);
+    //console.log(prompt)
     const responseText = result.response.candidates[0]?.content.parts[0]?.text || "Sin etiqueta";
+    //
+    console.log("responsetex:" + responseText)
     return (responseText);
 }

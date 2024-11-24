@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 //import jwt from 'jsonwebtoken';
 const { db, auth } = require("../config/firebase");
+const mailController = require('../controller/mailController');
 const path = require('path');
 router.get('/', (req, res) => {
   const message = req.query.message || null;
@@ -10,6 +11,23 @@ router.get('/', (req, res) => {
 
 
 });
+
+
+
+router.get('/reports', async (req, res) => {
+  const message = req.query.message || null;
+  res.render('reports', { errorMessage: message })
+});
+
+router.post("/reports/submit", mailController.sendReport);
+
+router.get('/support', async (req, res) => {
+  const message = req.query.message || null;
+  res.render('support', { errorMessage: message })
+});
+
+router.post("/support/submit", mailController.sendSupport);
+
 
 router.post('/setToken', (req, res) => {
   const { token } = req.body;
