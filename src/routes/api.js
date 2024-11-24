@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { db } = require("../config/firebase"); // Solo usas `db`, eliminé `auth` para evitar redundancias
-const mailController = require('../controller/mailController');
+
 require('dotenv').config();
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -76,20 +76,6 @@ router.post('/tags_jobs', async (req, res) => {
 
     }
 });
-
-router.get('/reports', async (req, res) => {
-    const message = req.query.message || null;
-    res.render('reports', { errorMessage: message })
-});
-
-router.post("/reports/submit", mailController.sendReport);
-
-router.get('/support', async (req, res) => {
-    const message = req.query.message || null;
-    res.render('support', { errorMessage: message })
-});
-
-router.post("/support/submit", mailController.sendSupport);
 
 
 module.exports = router;

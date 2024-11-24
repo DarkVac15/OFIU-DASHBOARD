@@ -358,10 +358,10 @@ Descripción: ${reportDescription}`,
       await transporter.sendMail(mailOptions);
       
       const errorMessage = "Reporte enviado correctamente.";
-      return res.redirect(`/api/reports/?message=${encodeURIComponent(errorMessage)}`);
+      return res.redirect(`/reports/?message=${encodeURIComponent(errorMessage)}`);
    } catch (error) {
       const errorMessage = "Error al enviar el reporte.";
-      return res.redirect(`/api/reports/?message=${encodeURIComponent(errorMessage)}`);
+      return res.redirect(`/reports/?message=${encodeURIComponent(errorMessage)}`);
    }
 };
 
@@ -387,10 +387,10 @@ Descripción: ${supportDescription}`,
       await transporter.sendMail(mailOptions);
       
       const errorMessage = "Soporte enviado correctamente.";
-      return res.redirect(`/api/support/?message=${encodeURIComponent(errorMessage)}`);
+      return res.redirect(`/support/?message=${encodeURIComponent(errorMessage)}`);
    } catch (error) {
       const errorMessage = "Error al enviar el soporte.";
-      return res.redirect(`/api/support/?message=${encodeURIComponent(errorMessage)}`);
+      return res.redirect(`/support/?message=${encodeURIComponent(errorMessage)}`);
    }
 };
 
