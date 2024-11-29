@@ -9,7 +9,7 @@
 const { db, auth } = require("../config/firebase");
 const express = require('express');
 
-const FieldValue = require('firebase-admin').firestore.FieldValue;
+
 
 const router = express.Router();
    
@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
     try {
         const snapshot = await db.collection('category').get();
         const etiquetas = []; // Para almacenar las categorías y subcategorías
-
+        const etiquetas1 = [];
         // Usamos un bucle 'for' en lugar de 'forEach' para poder manejar la asincronía
         for (const doc of snapshot.docs) {
             const data = doc.data(); // Obtén los datos del documento de la categoría
@@ -46,9 +46,13 @@ router.get('/', async (req, res) => {
                         subcategory: subDoc.id, // ID del documento de la subcategoría
                         description: subcategoryData.title, // Título de la subcategoría
                         image: subcategoryData.image, // Imagen de la subcategoría
+                   
                     });
+                
                 });
             }
+       
+
         }
 
         // Renderizamos la vista con las etiquetas procesadas
@@ -62,8 +66,35 @@ router.get('/', async (req, res) => {
         console.error('Error al obtener categorías y subcategorías:', error);
         res.status(500).send('Error al obtener categorías y subcategorías');
     }
-});
+});/*
+router.get('/categories-with-subcategories', async (req, res) => {
 
+    try {
+        tt=[
+"trabajador del transporte", "conductor profesional", "operador de vehículos", "chofer", "especialista en transporte", "trabajador de mudanzas", "profesional del transporte", "conductor de transporte", "transportista", "técnico en transporte",
+"mudancero", "trabajador de mudanzas", "especialista en mudanzas", "mover de muebles", "profesional en mudanzas", "operador de mudanzas", "empresa de mudanzas", "transportador de mudanzas", "técnico en mudanzas", "ayudante de mudanzas",
+"chofer de camiones", "conductor de vehículos pesados", "transportista de carga", "conductor de trailer", "camionero", "chofer de carga", "operador de camión", "conductor de transporte de mercancías", "especialista en camiones", "conductor de transporte pesado",
+
+"mensajero", "repartidor", "entregador a domicilio", "trabajador de entregas", "repartidor de paquetes", "conductor de entregas", "servicio de domicilio", "repartidor de comida", "entregador de productos", "mensajero a domicilio",
+"taxista", "chofer de taxi", "conductor de taxi", "taxista profesional", "operador de taxi", "conductor de transporte público", "conductor de vehículos de alquiler", "taxista a domicilio", "chofer de servicio de taxi", "conductor de transporte urbano"
+        ]
+        const cityRef = db.collection('category').doc('Transporte');
+
+// Set the 'capital' field of the city
+ await cityRef.update({
+    synonym: tt
+});
+               
+        
+        
+        // Devolver solo los nombres en la respuesta o renderizar una vista
+        res.send('ok1' )
+    } catch (error) {
+        console.error('Error al obtener categorías y subcategorías:', error);
+        res.status(500).send('Error al obtener categorías y subcategorías');
+    }
+});
+*/
 
     /*router.get('/', async (req, res) => {
         try {         

@@ -12,7 +12,14 @@ router.get('/', (req, res) => {
 
 });
 
-
+router.get('/PoliticadePrivacidad', async (req, res) => {
+    const message = req.query.message || null;
+  res.render('politic', { errorMessage: message })
+});
+router.get('/TerminosyCondicionesdeUso', async (req, res) => {
+  const message = req.query.message || null;
+  res.render('terms', { errorMessage: message })
+});
 
 router.get('/reports', async (req, res) => {
   const message = req.query.message || null;

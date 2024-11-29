@@ -26,25 +26,27 @@
 
 <body class="index-page">
 
- {{#if errorMessage}}
+  {{#if errorMessage}}
   <div class="alert-container">
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
       {{errorMessage}}
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
   </div>
-{{/if}}
+  {{/if}}
 
   <!-- Header -->
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid container-xl d-flex align-items-center justify-content-between">
-      <a href="index.html" class="logo d-flex align-items-center">
+      <a href="" class="logo d-flex align-items-center">
         <h1 class="sitename">OFIU</h1>
       </a>
       <nav id="navmenu" class="navmenu">
         <ul>
-          <li><a href="#hero" class="active">Home</a></li>
-          <li><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginmodal">Login</a></li>
+          <li><a href="#hero" class="active">Inicio</a></li>
+          <li><a href="/TerminosyCondicionesdeUso" class="">Terminos y Condiciones</a></li>
+          <li><a href="/PoliticadePrivacidad" class="">Politica de Privacidad</a></li>
+          <li><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginmodal">Iniciar sesion</a></li>
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
@@ -52,7 +54,7 @@
   </header>
 
   <!-- Main Section -->
-  <main class="main">
+  <main class="main ">
     <section id="hero" class="hero section dark-background">
       <div class="container">
         <div class="row gy-4">
@@ -60,9 +62,11 @@
             <img src="/img/phone_1.png" alt="Phone 1" class="phone-1">
             <img src="/img/phone_2.png" alt="Phone 2" class="phone-2">
           </div>
-          <div class="col-lg-8 d-flex flex-column justify-content-center align-items text-center text-md-start" data-aos="fade-up">
+          <div class="col-lg-8 d-flex flex-column justify-content-center align-items text-center text-md-start"
+            data-aos="fade-up">
             <h2>¡Conéctate con servicios locales de manera fácil y eficiente!</h2>
-            <p>Nuestro aplicativo móvil une a trabajadores autónomos y consumidores en una plataforma intuitiva. ¡Descubre una nueva forma de solicitar y disfrutar de servicios!</p>
+            <p>Nuestro aplicativo móvil une a trabajadores autónomos y consumidores en una plataforma intuitiva.
+              ¡Descubre una nueva forma de solicitar y disfrutar de servicios!</p>
             <div class="d-flex mt-4 justify-content-center justify-content-md-start">
               <a href="#" class="download-btn"><i class="bi bi-google-play"></i> <span>Google Play</span></a>
             </div>
@@ -87,18 +91,19 @@
       <div class="container">
         <div class="copyright">
           <span>&copy; 2024</span> <strong class="px-1 sitename">OFIU</strong> <span>All Rights Reserved</span>
-       <span class="mx-2">|</span>
-        <a href="/docs/politica-privacidad" target="_blank">Política de Privacidad</a>
-        <span class="mx-2">|</span>
-        <a href="/docs/terminos-condiciones" target="_blank">Términos y Condiciones</a>
-       
+          <span class="mx-2">|</span>
+          <a href="/docs/politica-privacidad" target="_blank">Política de Privacidad</a>
+          <span class="mx-2">|</span>
+          <a href="/docs/terminos-condiciones" target="_blank">Términos y Condiciones</a>
+
         </div>
       </div>
     </div>
   </footer>
 
   <!-- Scroll Top -->
-  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i
+      class="bi bi-arrow-up-short"></i></a>
 
   <!-- Preloader -->
   <div id="preloader"></div>
@@ -130,13 +135,13 @@
 
   <!-- Scroll to Error Alert -->
   <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const alertContainer = document.querySelector('.alert-container');
-    if (alertContainer) {
-      window.scrollTo({ top: alertContainer.offsetTop, behavior: 'smooth' });
-    }
-  });
-</script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const alertContainer = document.querySelector('.alert-container');
+      if (alertContainer) {
+        window.scrollTo({ top: alertContainer.offsetTop, behavior: 'smooth' });
+      }
+    });
+  </script>
 
   <!-- Vendor JS Files -->
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
@@ -148,4 +153,5 @@
   <script src="/js/main.js"></script>
 
 </body>
+
 </html>
