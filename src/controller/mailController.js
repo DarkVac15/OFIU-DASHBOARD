@@ -394,3 +394,34 @@ Descripción: ${supportDescription}`,
    }
 };
 
+
+
+
+
+// Función para enviar el reporte
+exports.sendUnsubscribe = async (req, res) => {
+   const { unsubscribeName, unsubscribeEmail, unsubscribeDescription } = req.body;
+   // Configura el contenido del correo
+   let mailOptions = {
+      from: "oficialofiu@gmail.com",
+      to: "oficialofiu@gmail.com", // Cambia a tu dirección de correo
+      subject: "Nueva solicitud de eliminacion de cuenta ",
+      text: `Detalles de la solicitud:
+Nombre usuario: ${unsubscribeName}
+Correo del usuario : ${unsubscribeEmail}
+Descripción: ${unsubscribeDescription}`,
+   };
+
+  
+
+   // Enviar el correo
+   try {
+      await transporter.sendMail(mailOptions);
+      
+      const errorMessage = "Soporte enviado correctamente.";
+      return res.redirect(`/support/?message=${encodeURIComponent(errorMessage)}`);
+   } catch (error) {
+      const errorMessage = "Error al enviar el soporte.";
+      return res.redirect(`/support/?message=${encodeURIComponent(errorMessage)}`);
+   }
+};

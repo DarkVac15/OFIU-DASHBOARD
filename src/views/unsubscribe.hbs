@@ -1,0 +1,56 @@
+{{#if errorMessage}}
+<div class="alert-container">
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{errorMessage}}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+{{/if}}
+<div class="container mt-5">
+    <h1 class="mb-4 text-light">OFIU</h1>
+
+    <h2 class="mb-4 text-light">Solicitud de Eliminación de Cuenta y Datos Personales</h2>
+    <h4 class="mb-4 text-light"> Al completar y enviar este formulario, solicitarás la eliminación permanente de tu
+        cuenta y de todos los datos personales asociados. Este proceso no se puede deshacer. Por favor, asegúrate de
+        haber descargado cualquier información importante antes de continuar </h4>
+
+    <form action="/unsubscribe/submit" method="POST">
+
+        <!-- Correo electrónico -->
+        <div class="mb-3">
+            <label for="unsubscribeName" class="form-label text-light">Nombre completo: </label>
+            <input type="text" class="form-control" id="unsubscribeName" name="unsubscribeName" required>
+        </div>
+
+        <!-- Correo electrónico -->
+        <div class="mb-3">
+            <label for="unsubscribeEmail" class="form-label text-light">Correo electrónico asociado a tu cuenta:</label>
+            <input type="email" class="form-control" id="unsubscribeEmail" name="unsubscribeEmail"
+                placeholder="ejemplo@correo.com" required>
+        </div>
+
+       
+        <!-- motivo-->
+     
+        <div class="mb-3">
+            <label for="unsubscribeDescription" class="form-label text-light">Motivo de la eliminación </label>
+            <textarea class="form-control" id="unsubscribeDescription" name="supportDescription" rows="4"
+                placeholder="Dinos por qué deseas eliminar tu cuenta" required></textarea>
+        </div>
+
+
+
+        <!-- Botón de envío -->
+        <button type="submit" class="btn btn-primary">Enviar Solicitud</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const alertContainer = document.querySelector('.alert-container');
+        if (alertContainer) {
+            window.scrollTo({ top: alertContainer.offsetTop, behavior: 'smooth' });
+        }
+    });
+</script>
+{{> footer}}

@@ -36,6 +36,17 @@ router.get('/support', async (req, res) => {
 router.post("/support/submit", mailController.sendSupport);
 
 
+
+
+router.post("/unsubscribe/submit", mailController.sendUnsubscribe);
+
+router.get('/unsubscribe', async (req, res) => {
+  const message = req.query.message || null;
+  res.render('unsubscribe', { errorMessage: message })
+});
+
+
+
 router.post('/setToken', (req, res) => {
   const { token } = req.body;
 
@@ -51,15 +62,6 @@ router.post('/setToken', (req, res) => {
 });
 
 
-router.get('/docs/politica-privacidad', (req, res) => {
-  const filePath = path.join(__dirname, '../public/docs/PolíticadePrivacidad.pdf');
-  res.sendFile(filePath);
-});
-
-router.get('/docs/terminos-condiciones', (req, res) => {
-  const filePath = path.join(__dirname, '../public/docs/TérminosyCondicionesdeUso.pdf');
-  res.sendFile(filePath);
-});
 
 router.post('/logout', (req, res) => {
   // Elimina la cookie del token
