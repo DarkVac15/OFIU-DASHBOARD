@@ -7,7 +7,7 @@ require('dotenv').config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 router.post('/tags_jobs', async (req, res) => {
-    const docId ="oM5ClYOUuyaBnHu58y4e";// req.body.id;
+    const docId = req.body.id;
     // console.log(docId);
  
     if (!docId) {
