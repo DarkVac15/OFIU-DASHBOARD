@@ -11,6 +11,66 @@
 # Help: https://bootstrapmade.com/color-system/
 --------------------------------------------------------------*/
 /* Fonts */
+/* Ajusta el margen superior del aside */
+
+/* Navbar con z-index alto para que se quede encima del aside */
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 20; /* Asegura que la navbar quede encima */
+}
+
+/* Aside con z-index menor para que quede detrás de la navbar */
+aside {
+  position: sticky;
+  top: 80px;  /* Ajusta este valor según la altura de tu navbar */
+  z-index: 5;  /* Asegura que el aside esté detrás de la navbar */
+}
+
+/* Media Query para pantallas pequeñas (dispositivos móviles) */
+@media (max-width: 768px) {
+  aside {
+    position: relative;  /* Cambia a relativo para que el aside no quede fijo */
+    top: 0;  /* Elimina el offset para móviles */
+    z-index: 1;  /* Asegura que el aside quede debajo de la navbar si es necesario */
+  }
+  
+  /* Opcional: También puedes ajustar el margen del aside si es necesario */
+  aside {
+    margin-top: 100px;  /* Ajusta el margen si es necesario para móviles */
+  }
+}
+
+
+/* Asegurar fondo azul permanente para la navbar */
+main section {
+  margin: 0;  /* Eliminar margen */
+  padding: 25px; /* Eliminar padding */
+}
+
+main section > * {
+  margin: 0;  /* Eliminar margen de los elementos hijos */
+  padding: 0; /* Eliminar padding de los elementos hijos */
+}
+
+.header {
+  background-color: #142E6C; /* Azul bootstrap */
+  color: #ffffff; /* Texto blanco para contraste */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Opcional, agrega sombra */
+}
+
+/* Mantén el fondo azul incluso al hacer scroll */
+.header.fixed-top {
+  background-color: #142E6C; /* Azul bootstrap */
+  color: #ffffff;
+}
+
+.list-group.sticky-top {
+  position: sticky;
+  top: 100px; /* Ajusta el valor según la altura de tu navbar */
+}
+
 
 .alert-container {
   max-width: 500px;

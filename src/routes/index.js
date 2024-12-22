@@ -1,29 +1,40 @@
 const express = require('express');
 const router = express.Router();
 //import jwt from 'jsonwebtoken';
-const { db, auth } = require("../config/firebase");
+
 const mailController = require('../controller/mailController');
-const path = require('path');
+
 router.get('/', (req, res) => {
   const message = req.query.message || null;
 
-  res.render('landing', { layout: 'main', showNavbar: false, errorMessage: message }); // Envía el mensaje a la vista
+  res.render('landingcopy', { layout: 'main_page',
+    isPolitica: false,
+    isHome: true,
+    isTerminos: false
 
-
+   }); // Envía el mensaje a la vista
 });
-
+ 
 router.get('/PoliticadePrivacidad', async (req, res) => {
     const message = req.query.message || null;
-  res.render('politic', { errorMessage: message })
+  res.render('politic', { errorMessage: message, layout: 'main_page',
+    isPolitica: true,
+    isHome: false,
+    isTerminos: false
+   })
 });
 router.get('/TerminosyCondicionesdeUso', async (req, res) => {
   const message = req.query.message || null;
-  res.render('terms', { errorMessage: message })
+  res.render('terms', { errorMessage: message, layout: 'main_page',
+    isPolitica: false,
+    isHome: false,
+    isTerminos: true
+   })
 });
 
 router.get('/reports', async (req, res) => {
   const message = req.query.message || null;
-  res.render('reports', { errorMessage: message })
+  res.render('reports', { errorMessage: message , })
 });
 
 router.post("/reports/submit", mailController.sendReport);

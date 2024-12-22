@@ -44,34 +44,6 @@
         window.firebaseStorage = storage;
         window.firebaseAuth = auth;
 
-        async function login(email, password) {
-            try {
-                // Iniciar sesión en Firebase y obtener el token
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const idToken = await userCredential.user.getIdToken();
-
-                await fetch('/setToken', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: idToken })
-                });
-
-
-                window.location.href = '/dashboard';
-
-            } catch (error) {
-                console.error('Error al iniciar sesión:', error);
-                const errorMessage = "Correo o contraseña inválidos. Inténtalo de nuevo.";
-                window.location.href = `/?message=${encodeURIComponent(errorMessage)}`;
-            }
-        }
-
-        document.getElementById('loginButton')?.addEventListener('click', function () {
-            const email = document.getElementById('emailInput').value;
-            const password = document.getElementById('passwordInput').value;
-            login(email, password);
-        });
-
         async function logout() {
             try {
                 await signOut(auth);
