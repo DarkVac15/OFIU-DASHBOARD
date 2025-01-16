@@ -4,15 +4,17 @@ const router = express.Router();
 
 const mailController = require('../controller/mailController');
 
-router.get('/', (req, res) => {
-  const message = req.query.message || null;
 
+router.get('/', (req, res) => {
+  
+const message = req.query.message || null;
   res.render('landingcopy', { layout: 'main_page',
     isPolitica: false,
     isHome: true,
-    isTerminos: false
+    isTerminos: false,
+    errorMessage: message 
 
-   }); // Envía el mensaje a la vista
+    }); // Envía el mensaje a la vista
 });
  
 router.get('/PoliticadePrivacidad', async (req, res) => {

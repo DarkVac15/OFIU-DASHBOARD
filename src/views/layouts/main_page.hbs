@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Index - OFIU</title>
+  <title>OFIU</title>
   <meta name="description" content="">
   <meta name="keywords" content="">
 
@@ -25,6 +25,10 @@
 </head>
 
 <body class="index-page">
+ 
+
+  {{> navbar_page}} 
+   
   {{#if errorMessage}}
   <div class="alert-container">
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -34,8 +38,6 @@
   </div>
   {{/if}}
 
-
-  {{> navbar_page}} <!-- Mostrar el navbar_page solo si showNavbar es true -->
 
 
   {{{body}}}
@@ -110,9 +112,11 @@
         window.location.href = '/dashboard';
 
       } catch (error) {
-        console.error('Error al iniciar sesión:', error);
+
+       
         const errorMessage = "Correo o contraseña inválidos. Inténtalo de nuevo.";
         window.location.href = `/?message=${encodeURIComponent(errorMessage)}`;
+        
       }
     }
 
@@ -136,7 +140,6 @@
       }
     });
   </script>
-
 
 
   <!-- Vendor JS Files -->

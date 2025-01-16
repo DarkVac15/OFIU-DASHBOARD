@@ -456,10 +456,10 @@ exports.dataReports = async (req, res) => {
     const sections = splitByTitles(messageString);
 
     // Transformar el texto a una lista HTML
-    
+
     console.log(sections)
     let p1 = sections["Hallazgos"];
-    
+
     let p2 = sections["Recomendaciones"];
     let p3 = sections["Perspectivas futuras"];
 
@@ -468,7 +468,7 @@ exports.dataReports = async (req, res) => {
         .filter(item => item.trim() !== '') // Eliminar elementos vacíos
         .map(item => `<li>${item.trim()}</li>`) // Envolver cada ítem en <li>
         .join(''); // Unir todo como cadena
-    const formattedRecomendaciones =p2
+    const formattedRecomendaciones = p2
         .split('*') // Dividir por el asterisco inicial
         .filter(item => item.trim() !== '') // Eliminar elementos vacíos
         .map(item => `<li>${item.trim()}</li>`) // Envolver cada ítem en <li>
@@ -478,8 +478,8 @@ exports.dataReports = async (req, res) => {
         .filter(item => item.trim() !== '') // Eliminar elementos vacíos
         .map(item => `<li>${item.trim()}</li>`) // Envolver cada ítem en <li>
         .join(''); // Unir todo como cadena = sections["Recomendaciones"]
-        
-        //envio de datos a la vista
+
+    //envio de datos a la vista
     res.render('inform', {
         fechaActual,
         totalUsers,//total usuarios
@@ -556,7 +556,13 @@ exports.generatePDF = async (req, res) => {
             : `http://localhost:3000/dashboard/export-pdf`; // URL sin parámetros si no se pasan fechas
 
         // Iniciar Puppeteer
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({
+            executablePath: '/usr/bin/chromium-browser',
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        }
+        );
+
         const page = await browser.newPage();
 
         // Navegar a la URL de la página de la cual deseas hacer el PDF
