@@ -13,10 +13,9 @@ const transporter = nodemailer.createTransport({
 // Controlador para enviar correo de habilitar/inhabilitar usuarios
 exports.toggleUserStatus = async (req, res) => {
    const { uid, action, email, motivo, name } = req.body;
-   console.log(req.body)
-   // Verificar si se ha proporcionado un email
+      // Verificar si se ha proporcionado un email
    if (!email) {
-      console.log('Error: No se ha definido un destinatario.');
+      
       return res.status(400).json({ error: 'No se ha definido un destinatario para el correo.' });
    }
 

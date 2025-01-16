@@ -30,7 +30,7 @@ router.post('/tags_jobs', async (req, res) => {
             
             subcategorias.push(...subcategoryTitles); 
         }
-        console.log(subcategorias)
+       
 
         // console.log(subcategories);
         // Obtener el ticket del ID proporcionado
@@ -55,7 +55,7 @@ router.post('/tags_jobs', async (req, res) => {
         const result = await model.generateContent(prompt);
 
         const responseText = result.response.candidates[0]?.content.parts[0]?.text || "Sin etiqueta";
-        console.log(prompt)
+    //    console.log(prompt)
 
         // Limpiar y formatear las etiquetas sugeridas
         const etiquetasSugeridas = responseText

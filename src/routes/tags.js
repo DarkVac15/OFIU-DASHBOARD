@@ -1,18 +1,7 @@
-//
-//card de tickets creados
-//ticktes conectaods por campo de estado
-//
-//
-//
-//
-
 const { db, auth } = require("../config/firebase");
 const express = require('express');
-
-
-
 const router = express.Router();
-   
+
 router.get('/', async (req, res) => {
     try {
         const snapshot = await db.collection('category').get();
@@ -51,10 +40,7 @@ router.get('/', async (req, res) => {
                 
                 });
             }
-       
-
         }
-
         // Renderizamos la vista con las etiquetas procesadas
         res.render('tags', {
             title: 'Gestión de Etiquetas',
@@ -66,95 +52,7 @@ router.get('/', async (req, res) => {
         console.error('Error al obtener categorías y subcategorías:', error);
         res.status(500).send('Error al obtener categorías y subcategorías');
     }
-});/*
-router.get('/categories-with-subcategories', async (req, res) => {
-
-    try {
-        tt=[
-"trabajador del transporte", "conductor profesional", "operador de vehículos", "chofer", "especialista en transporte", "trabajador de mudanzas", "profesional del transporte", "conductor de transporte", "transportista", "técnico en transporte",
-"mudancero", "trabajador de mudanzas", "especialista en mudanzas", "mover de muebles", "profesional en mudanzas", "operador de mudanzas", "empresa de mudanzas", "transportador de mudanzas", "técnico en mudanzas", "ayudante de mudanzas",
-"chofer de camiones", "conductor de vehículos pesados", "transportista de carga", "conductor de trailer", "camionero", "chofer de carga", "operador de camión", "conductor de transporte de mercancías", "especialista en camiones", "conductor de transporte pesado",
-
-"mensajero", "repartidor", "entregador a domicilio", "trabajador de entregas", "repartidor de paquetes", "conductor de entregas", "servicio de domicilio", "repartidor de comida", "entregador de productos", "mensajero a domicilio",
-"taxista", "chofer de taxi", "conductor de taxi", "taxista profesional", "operador de taxi", "conductor de transporte público", "conductor de vehículos de alquiler", "taxista a domicilio", "chofer de servicio de taxi", "conductor de transporte urbano"
-        ]
-        const cityRef = db.collection('category').doc('Transporte');
-
-// Set the 'capital' field of the city
- await cityRef.update({
-    synonym: tt
 });
-               
-        
-        
-        // Devolver solo los nombres en la respuesta o renderizar una vista
-        res.send('ok1' )
-    } catch (error) {
-        console.error('Error al obtener categorías y subcategorías:', error);
-        res.status(500).send('Error al obtener categorías y subcategorías');
-    }
-});
-*/
-
-    /*router.get('/', async (req, res) => {
-        try {         
-            const snapshot = await db.collection('category').get();    
-            const etiquetas = []; // Para almacenar las categorías y subcategorías    
-            snapshot.forEach(doc => {
-                const data = doc.data(); // Obtén los datos del documento
-                // Verificar si el documento tiene subcategorías
-                let hasSubcategories = false;    
-                // Iterar sobre cada subcategoría en el documento
-                for (const [key, value] of Object.entries(data)) {
-                    if (value && typeof value === 'object') {
-                        hasSubcategories = true;
-                        etiquetas.push({
-                            category: doc.id, // Nombre de la categoría (nombre del documento)
-                            subcategory: key, // Nombre de la subcategoría
-                            description: value.desc, // Descripción de la subcategoría
-                            image: value.image // Imagen de la subcategoría
-                        });
-                    }
-                }
-    
-                // Si naaao hay subcategorías, agrega la categoría como vacía
-                if (!hasSubcategories) {
-                    etiquetas.push({
-                        category: doc.id, // Nombre de la categoría
-                        subcategory: 'N/A', // Indicador de que no hay subcategoría
-                        description: 'Sin descripción', // Descripción por defecto
-                        image: '', // Imagen vacía
-                    });
-                }
-            });
-            res.render('tags', { title: 'Gestión de Etiquetas', etiquetas, layout: 'main', showNavbar: true });
-        } catch (error) {
-            console.error('Error al obtener etiquetas:', error);
-            res.status(500).send('Error al obtener etiquetas');
-        }
-    });*/
-    
-   // res.render('tags', { layout: 'main', showNavbar: true })  // Reemplaza [] con las etiquetas reales
-
-
-  /* router.post('/add-category', async (req, res) => {
-    const { category, image} = req.body;
-
-    try {
-        // Crea un nuevo documento con el ID igual a la categoría
-        await db.collection('category').doc(category).set({
-            // Puedes agregar otros campos si es necesario, por ejemplo:
-            // Campo de ejemplo
-            image: image 
-        });
-
-        res.status(201).send('Categoría agregada'); // Responde con un estado 201
-    } catch (error) {
-        console.error('Error agregando categoría: ', error);
-        res.status(500).send('Error al agregar categoría');
-    }
-});*/
-
 router.post('/add-category', async (req, res) => {
     const { category, image } = req.body;
 
@@ -172,29 +70,6 @@ router.post('/add-category', async (req, res) => {
         res.status(500).send('Error al agregar categoría');
     }
 });
-
-/*
-router.post('/add-subcategory',  async (req, res) => {
-    const { categoriaId, subcategoria, descripcion,image } = req.body;
-    if (!categoriaId || !subcategoria || !descripcion || !image ) {
-        return res.status(400).send('Todos los campos son requeridos');
-    }
-   try {
-        const categoryDoc = db.collection('category').doc(categoriaId);      
-        await categoryDoc.set({
-            [subcategoria]: {
-                desc: descripcion,
-                image: image
-            }
-        }, { merge: true });  // Utiliza merge para no sobrescribir otros datos del documento
-
-        res.status(201).send('Subcategoría agregada');
-    } catch (error) {
-        console.error('Error agregando subcategoría: ', error);
-        res.status(500).send('Error al agregar subcategoría');
-    }
-});*/
-
 router.post('/add-subcategory', async (req, res) => {
     const { categoriaId, subcategoria,  image } = req.body;
     
@@ -224,25 +99,6 @@ router.post('/add-subcategory', async (req, res) => {
     }
 });
 
-// Ruta para eliminar subcategoría
-
-// Ruta para eliminar un campo de un documento
-/*router.delete('/delete-subcategory/:categoryId/:subcategoryId', async (req, res) => {
-    const { categoryId, subcategoryId } = req.params;
-
-    try {
-        const docRef = db.collection('category').doc(categoryId); // Referencia al documento
-        await docRef.update({
-            [subcategoryId]: FieldValue.delete() // Elimina el campo
-        });
-
-        res.status(200).send({ message: 'Campo eliminado con éxito' });
-    } catch (error) {
-        console.error('Error al eliminar el campo:', error);
-        res.status(500).send({ message: 'Error al eliminar el campo' });
-    }
-});*/
-
 router.delete('/delete-subcategory/:categoryId/:subcategoryId', async (req, res) => {
     const { categoryId, subcategoryId } = req.params;
 
@@ -262,10 +118,4 @@ router.delete('/delete-subcategory/:categoryId/:subcategoryId', async (req, res)
         res.status(500).send({ message: 'Error al eliminar la subcategoría' });
     }
 });
-
-
-
-
-
-
 module.exports = router; 

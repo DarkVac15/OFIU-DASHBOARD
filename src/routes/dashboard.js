@@ -1,13 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const puppeteer = require('puppeteer');
+const verifyToken = require('../middleware/web');
 const dashboardController = require('../controller/dashboardController');
 
-//const { db, auth,serverTimestamp } = require("../config/firebase");
 
-
-router.get('/', dashboardController.dataDashboard);
-router.get('/export-pdf', dashboardController.dataReports);
+router.get('/',verifyToken, dashboardController.dataDashboard);
+router.get('/export-pdf',verifyToken, dashboardController.dataReports);
 
 router.get('/generate-pdf', dashboardController.generatePDF);
 

@@ -1,7 +1,6 @@
 const { db, auth } = require("../config/firebase");
 const puppeteer = require('puppeteer');
 
-
 exports.dataDashboard = async (req, res) => {
 
     let totalProfessionals = 0;
@@ -26,7 +25,6 @@ exports.dataDashboard = async (req, res) => {
     if (endDate) {
         endDate.setHours(endDate.getHours() - 5); // Ajustar la fecha de fin
     }
-
     const categoriesSnapshot = await db.collection('category').get(); // Obtener todas las categorías
     const categoriasConSubcategorias = []; // Array para almacenar las categorías con sus subcategorías
     for (const categoryDoc of categoriesSnapshot.docs) {
@@ -41,7 +39,6 @@ exports.dataDashboard = async (req, res) => {
             subcategories: subcategoryTitles, // Array de títulos de subcategorías
         });
     }
-    console.log(categoriasConSubcategorias)
 
 
     let usersQuery = db.collection('users');
@@ -457,7 +454,7 @@ exports.dataReports = async (req, res) => {
 
     // Transformar el texto a una lista HTML
 
-    console.log(sections)
+    
     let p1 = sections["Hallazgos"];
 
     let p2 = sections["Recomendaciones"];
@@ -621,6 +618,6 @@ async function getGreeting(fechaActual, totalUsers, totalProfessionals, totalTic
     //console.log(prompt)
     const responseText = result.response.candidates[0]?.content.parts[0]?.text || "Sin etiqueta";
     //
-    console.log("responsetex:" + responseText)
+  
     return (responseText);
 }

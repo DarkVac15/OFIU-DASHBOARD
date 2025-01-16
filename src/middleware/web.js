@@ -24,7 +24,7 @@ const verifyToken = async (req, res, next) => {
        
     }
   } catch (error) {
-    console.error("Error al verificar token:", error);
+   
     const errorMessage = "Token inválido.";
     return res.redirect(`/?message=${encodeURIComponent(errorMessage)}`);
   }
