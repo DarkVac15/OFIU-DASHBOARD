@@ -36,15 +36,29 @@ router.get('/TerminosyCondicionesdeUso', async (req, res) => {
 
 router.get('/reports', async (req, res) => {
   const message = req.query.message || null;
-  res.render('reports', { errorMessage: message , })
+  res.render('reports', { 
+    errorMessage: message,
+    layout: 'main_page',
+    isPolitica: false,
+    isHome: false,
+    isTerminos: false,  
+  })
 });
 
 router.post("/reports/submit", mailController.sendReport);
 
 router.get('/support', async (req, res) => {
   const message = req.query.message || null;
-  res.render('support', { errorMessage: message })
+  res.render('support', {
+     errorMessage: message,
+     layout: 'main_page',
+     isPolitica: false,
+     isHome: false,
+     isTerminos: false,
+     })
 });
+
+
 
 router.post("/support/submit", mailController.sendSupport);
 
@@ -55,7 +69,14 @@ router.post("/unsubscribe/submit", mailController.sendUnsubscribe);
 
 router.get('/unsubscribe', async (req, res) => {
   const message = req.query.message || null;
-  res.render('unsubscribe', { errorMessage: message })
+  res.render('unsubscribe', { 
+    errorMessage: message,
+    layout: 'main_page',
+    isPolitica: false,
+    isHome: false,
+    isTerminos: false,
+
+   })
 });
 
 

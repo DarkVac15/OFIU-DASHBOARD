@@ -6,44 +6,43 @@
     </div>
 </div>
 {{/if}}
-<div class="container mt-5">
-    <h1 class="mb-4 text-light">OFIU</h1>
+  <h2 class="mb-4 text-center">xd </h2>
+<div class="d-flex justify-content-center align-items-center vh-100">
+  <div class="border bg-white p-4 w-50 shadow rounded">
 
-    <h2 class="mb-4 text-light">Solicitud de Eliminación de Cuenta y Datos Personales</h2>
-    <h4 class="mb-4 text-light"> Al completar y enviar este formulario, solicitarás la eliminación permanente de tu
-        cuenta y de todos los datos personales asociados. Este proceso no se puede deshacer. Por favor, asegúrate de
-        haber descargado cualquier información importante antes de continuar </h4>
+        <h2 class="mb-4 text-center">Solicitud de Eliminación de Cuenta y Datos Personales</h2>
+        <h6 class="mb-4 "> Al completar y enviar este formulario, solicitarás la eliminación permanente de tu
+            cuenta y de todos los datos personales asociados. Este proceso no se puede deshacer. Por favor, asegúrate de
+            haber descargado cualquier información importante antes de continuar </h6>
 
-    <form action="/unsubscribe/submit" method="POST">
+        <form action="/unsubscribe/submit" method="POST">
 
-        <!-- Correo electrónico -->
-        <div class="mb-3">
-            <label for="unsubscribeName" class="form-label text-light">Nombre completo: </label>
-            <input type="text" class="form-control" id="unsubscribeName" name="unsubscribeName" required>
-        </div>
+            <!-- Correo electrónico -->
+            <div class="mb-3">
+                <label for="unsubscribeName" class="form-label ">Nombre completo: </label>
+                <input type="text" class="form-control" id="unsubscribeName" name="unsubscribeName" required>
+            </div>
 
-        <!-- Correo electrónico -->
-        <div class="mb-3">
-            <label for="unsubscribeEmail" class="form-label text-light">Correo electrónico asociado a tu cuenta:</label>
-            <input type="email" class="form-control" id="unsubscribeEmail" name="unsubscribeEmail"
-                placeholder="ejemplo@correo.com" required>
-        </div>
-
-       
-        <!-- motivo-->
-     
-        <div class="mb-3">
-            <label for="unsubscribeDescription" class="form-label text-light">Motivo de la eliminación </label>
-            <textarea class="form-control" id="unsubscribeDescription" name="supportDescription" rows="4"
-                placeholder="Dinos por qué deseas eliminar tu cuenta" required></textarea>
-        </div>
-
-
-
-        <!-- Botón de envío -->
-        <button type="submit" class="btn btn-primary">Enviar Solicitud</button>
-    </form>
+            <!-- Correo electrónico -->
+            <div class="mb-3">
+                <label for="unsubscribeEmail" class="form-label ">Correo electrónico asociado a tu cuenta:</label>
+                <input type="email" class="form-control" id="unsubscribeEmail" name="unsubscribeEmail"
+                    placeholder="ejemplo@correo.com" required>
+            </div>
+            <!-- motivo-->
+            <div class="mb-3">
+                <label for="unsubscribeDescription" class="form-label ">Motivo de la eliminación </label>
+                <textarea class="form-control" id="unsubscribeDescription" name="supportDescription" rows="4"
+                    placeholder="Dinos por qué deseas eliminar tu cuenta" required></textarea>
+            </div>
+            <!-- Botón de envío -->
+            <div class="d-flex justify-content-center">
+                <button type="submit" class="btn btn-primary">Enviar Solicitud</button>
+            </div>
+        </form>
+    </div>
 </div>
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -53,4 +52,3 @@
         }
     });
 </script>
-{{> footer}}

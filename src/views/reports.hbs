@@ -1,49 +1,56 @@
-    
-     {{#if errorMessage}}
-  <div class="alert-container">
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-      {{errorMessage}}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+{{#if errorMessage}}
+<div class="alert-container">
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    {{errorMessage}}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
   </div>
+</div>
 {{/if}}
 
-    <div class="container mt-5">
-         <h1 class="mb-4 text-light">OFIU</h1>
-        <h2 class="mb-4 text-light">Formulario de Reporte</h2>
+<div class="d-flex justify-content-center align-items-center vh-100">
+  <div class="border bg-white p-4 w-50 shadow rounded">
 
-        <form action="/reports/submit" method="POST" >
-            <!-- Correo electrónico del que reporta -->
-            <div class="mb-3">
-                <label for="reporterEmail" class="form-label text-light">Correo electrónico del que reporta</label>
-                <input type="email" class="form-control" id="reporterEmail" name="reporterEmail" placeholder="ejemplo@correo.com" required>
-            </div>
+    <h2 class="mb-4  text-center">Formulario de Reporte</h2>
 
-            <!-- Usuario a reportar -->
-            <div class="mb-3">
-                <label for="reportedUser" class="form-label text-light">Usuario a reportar</label>
-                <input type="text" class="form-control" id="reportedUser" name="reportedUser" placeholder="Nombre de usuario" required>
-            </div>
+    <form action="/reports/submit" method="POST">
+      <!-- Correo electrónico del que reporta -->
+      <div class="mb-3">
+        <label for="reporterEmail" class="form-label ">Correo electrónico del que reporta</label>
+        <input type="email" class="form-control" id="reporterEmail" name="reporterEmail"
+          placeholder="ejemplo@correo.com" required>
+      </div>
 
-            <!-- Descripción del reporte -->
-            <div class="mb-3">
-                <label for="reportDescription" class="form-label text-light">Descripción del reporte</label>
-                <textarea class="form-control" id="reportDescription" name="reportDescription" rows="4" placeholder="Describa el motivo del reporte" required></textarea>
-            </div>
+      <!-- Usuario a reportar -->
+      <div class="mb-3">
+        <label for="reportedUser" class="form-label ">Usuario a reportar</label>
+        <input type="text" class="form-control" id="reportedUser" name="reportedUser" placeholder="Nombre de usuario"
+          required>
+      </div>
 
-           
+      <!-- Descripción del reporte -->
+      <div class="mb-3">
+        <label for="reportDescription" class="form-label ">Descripción del reporte</label>
+        <textarea class="form-control" id="reportDescription" name="reportDescription" rows="4"
+          placeholder="Describa el motivo del reporte" required></textarea>
+      </div>
 
-            <!-- Botón de envío -->
-            <button type="submit" class="btn btn-primary">Enviar Reporte</button>
-        </form>
-    </div>
-{{> footer}}
 
- <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const alertContainer = document.querySelector('.alert-container');
-    if (alertContainer) {
-      window.scrollTo({ top: alertContainer.offsetTop, behavior: 'smooth' });
-    }
-  });
-</script>
+
+      <!-- Botón de envío -->
+
+      <div class="d-flex justify-content-center">
+        <button type="submit" class="btn btn-primary">Enviar Reportes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const alertContainer = document.querySelector('.alert-container');
+      if (alertContainer) {
+        window.scrollTo({ top: alertContainer.offsetTop, behavior: 'smooth' });
+      }
+    });
+  </script>

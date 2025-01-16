@@ -6,35 +6,38 @@
     </div>
   </div>
 {{/if}}
-    <div class="container mt-5">
-          <h1 class="mb-4 text-light">OFIU</h1>
-       
-        <h2 class="mb-4 text-light">Formulario de soporte</h2>
 
+ <div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="border bg-white p-4 w-50 shadow rounded">
+       
+        <h2 class="mb-4 text-center ">Formulario de soporte</h2>
         <form action="/support/submit" method="POST" >
             <!-- Correo electrónico del que reporta -->
             <div class="mb-3">
-                <label for="reporterEmail" class="form-label text-light">Correo electrónico del que solicita el soporte</label>
-                <input type="email" class="form-control" id="supportEmail" name="supportEmail" placeholder="ejemplo@correo.com" required>
+                <label for="reporterEmail" class="form-label ">Correo electrónico del que solicita el soporte</label>
+                <input type="email" class="form-control " id="supportEmail" name="supportEmail" placeholder="ejemplo@correo.com" required>
             </div>
 
             <!-- Usuario a reportar -->
             <div class="mb-3">
-                <label for="reportedUser" class="form-label text-light">Nombre de usuario</label>
-                <input type="text" class="form-control" id="supportUser" name="supportUser" placeholder="Nombre de usuario" required>
+                <label for="reportedUser" class="form-label ">Nombre de usuario</label>
+                <input type="text" class="form-control " id="supportUser" name="supportUser" placeholder="Nombre de usuario" required>
             </div>
 
             <!-- Descripción del reporte -->
             <div class="mb-3">
-                <label for="reportDescription" class="form-label text-light">Descripción del soporte</label>
-                <textarea class="form-control" id="supportDescription" name="supportDescription" rows="4" placeholder="Describa el motivo del soporte" required></textarea>
+                <label for="reportDescription" class="form-label ">Descripción del soporte</label>
+                <textarea class="form-control " id="supportDescription" name="supportDescription" rows="4" placeholder="Describa el motivo del soporte" required></textarea>
             </div>
 
            
 
             <!-- Botón de envío -->
+                   <div class="d-flex justify-content-center">
             <button type="submit" class="btn btn-primary">Enviar Reporte</button>
+            </div>
         </form>
+    </div>
     </div>
 
     <script>
@@ -45,4 +48,4 @@
     }
   });
 </script>
-{{> footer}}
+

@@ -2,6 +2,7 @@
 const admin = require("firebase-admin");
 
 const verifyToken = async (req, res, next) => {
+  
   const token = req.cookies.token;
   req.session = { user: null };
 

@@ -1,17 +1,28 @@
- <header id="header" class="header d-flex align-items-center fixed-top ">
-    <div class="container-fluid container-xl d-flex align-items-center justify-content-between">
-      <a href="/" class="logo d-flex align-items-center">
-        <h1 class="sitename">OFIU</h1>
-      </a>
-      
-      <nav id="navmenu" class="navmenu">
-        <ul>
-          <li><a href="/" class="{{#if isHome}}active{{/if}}">Inicio</a></li>
-          <li><a href="/TerminosyCondicionesdeUso" class="{{#if isTerminos}}active{{/if}}">Terminos y Condiciones</a></li>
-          <li><a href="/PoliticadePrivacidad" class="{{#if isPolitica}}active{{/if}}">Politica de Privacidad</a></li>
-          <li><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginmodal">Iniciar sesion</a></li>
-        </ul>
-        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-      </nav>
-    </div>
-  </header>
+<header id="header" class="header d-flex align-items-center fixed-top ">
+  <div class="container-fluid container-xl d-flex align-items-center justify-content-between">
+    <a href="/" class="logo d-flex align-items-center">
+      <h1 class="sitename">OFIU</h1>
+    </a>
+
+    <nav id="navmenu" class="navmenu">
+      <ul>
+        <li><a href="/" class="{{#if isHome}}active{{/if}}">Inicio</a></li>
+        <li><a href="/TerminosyCondicionesdeUso" class="{{#if isTerminos}}active{{/if}}">Terminos y Condiciones</a></li>
+        <li><a href="/PoliticadePrivacidad" class="{{#if isPolitica}}active{{/if}}">Politica de Privacidad</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Solicitudes
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="/reports">Reportes</a></li>
+            <li><a class="dropdown-item" href="/support">Soporte</a></li>
+            <li><a class="dropdown-item" href="/unsubscribe">Eliminación</a></li>
+
+          </ul>
+        </li>
+        <li><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginmodal">Iniciar sesion</a></li>
+      </ul>
+      <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+    </nav>
+  </div>
+</header>

@@ -1,6 +1,7 @@
 const { db, auth } = require("../config/firebase");
 const puppeteer = require('puppeteer');
 
+
 exports.dataDashboard = async (req, res) => {
 
     let totalProfessionals = 0;
@@ -447,34 +448,46 @@ exports.dataReports = async (req, res) => {
         jsonify(ticketTrendData)
     );
 
-    //const message = "";
-    const messageString = String(message);
-    //console.log("mensaje " + messageString)
-    const sections = splitByTitles(messageString);
+    const texto = String(message);
 
-    // Transformar el texto a una lista HTML
 
-    
-    let p1 = sections["Hallazgos"];
+    // Segmentar texto en tres variables
+    const hallazgos = texto.match(/(?<=\*\*Hallazgos:\n)([\s\S]*?)(?=\n\*\*Recomendaciones:\*\*)/)[0].trim();
+    const recomendaciones = texto.match(/(?<=\*\*Recomendaciones:\*\*\n)([\s\S]*?)(?=\n\*\*Perspectivas Futuras:\*\*)/)[0].trim();
+    const perspectivasFuturas = texto.match(/(?<=\*\*Perspectivas Futuras:\*\*\n)([\s\S]*)/)[0].trim();
 
-    let p2 = sections["Recomendaciones"];
-    let p3 = sections["Perspectivas futuras"];
 
-    const formattedHallazgos = p1
-        .split('*') // Dividir por el asterisco inicial
+    const formattedHallazgos = hallazgos
+        .split(/\n\* /) // Dividir por el asterisco inicial de cada ítem de la lista
         .filter(item => item.trim() !== '') // Eliminar elementos vacíos
-        .map(item => `<li>${item.trim()}</li>`) // Envolver cada ítem en <li>
+        .map(item => {
+            // Eliminar los asteriscos y limpiar saltos de línea
+            const cleanedItem = item.replace(/\*\*/g, '').replace(/\n+/g, ' ').trim();
+            return `<li>${cleanedItem}</li>`;
+        })
         .join(''); // Unir todo como cadena
-    const formattedRecomendaciones = p2
-        .split('*') // Dividir por el asterisco inicial
+
+
+    const formattedRecomendaciones = recomendaciones
+        .split(/\n\* /) // Dividir por el asterisco inicial de cada ítem de la lista
         .filter(item => item.trim() !== '') // Eliminar elementos vacíos
-        .map(item => `<li>${item.trim()}</li>`) // Envolver cada ítem en <li>
+        .map(item => {
+            // Eliminar los asteriscos y limpiar saltos de línea
+            const cleanedItem = item.replace(/\*\*/g, '').replace(/\n+/g, ' ').trim();
+            return `<li>${cleanedItem}</li>`;
+        })
         .join(''); // Unir todo como cadena
-    const formattedPerspectivasFuturas = p3
-        .split('*') // Dividir por el asterisco inicial
+
+    const formattedPerspectivasFuturas = perspectivasFuturas
+        .split(/\n\* /) // Dividir por el asterisco inicial de cada ítem de la lista
         .filter(item => item.trim() !== '') // Eliminar elementos vacíos
-        .map(item => `<li>${item.trim()}</li>`) // Envolver cada ítem en <li>
-        .join(''); // Unir todo como cadena = sections["Recomendaciones"]
+        .map(item => {
+            // Eliminar los asteriscos y limpiar saltos de línea
+            const cleanedItem = item.replace(/\*\*/g, '').replace(/\n+/g, ' ').trim();
+            return `<li>${cleanedItem}</li>`;
+        })
+        .join(''); // Unir todo como cadena
+
 
     //envio de datos a la vista
     res.render('inform', {
@@ -507,42 +520,6 @@ exports.dataReports = async (req, res) => {
 };
 
 
-
-// Función para dividir el texto por títulos
-function splitByTitles(text) {
-    //console.log("aaaa" + text)
-    // Expresión regular para encontrar los títulos (entre doble asterisco **)
-    const titleRegex = /\*\*(.+?):\*\*/g;
-    let sections = {};
-    let lastIndex = 0;
-    let match;
-    let lastTitle = null;
-
-    while ((match = titleRegex.exec(text)) !== null) {
-        const title = match[1].trim(); // Obtener el título
-        const start = match.index;
-
-        // Si hay un título anterior, guardamos su contenido
-        if (lastTitle) {
-            sections[lastTitle] = text.slice(lastIndex, start).trim();
-        }
-
-        // Actualizar el último índice y título
-        lastIndex = titleRegex.lastIndex;
-        lastTitle = title;
-    }
-
-    // Agregar el contenido de la última sección
-    if (lastTitle) {
-        sections[lastTitle] = text.slice(lastIndex).trim();
-    }
-
-    // console.log("pruea" + sections["Hallazgos"])
-    return sections;
-}
-
-
-//const puppeteer = require('puppeteer');
 exports.generatePDF = async (req, res) => {
 
     try {
@@ -552,12 +529,16 @@ exports.generatePDF = async (req, res) => {
             ? `http://localhost:3000/dashboard/export-pdf?startDate=${startDate}&endDate=${endDate}`
             : `http://localhost:3000/dashboard/export-pdf`; // URL sin parámetros si no se pasan fechas
 
+
+        //    console.log('Token obtenido:', req.cookies.token);
+
+
         // Iniciar Puppeteer
         const browser = await puppeteer.launch({
             executablePath: '/usr/bin/chromium-browser',
             headless: true,
             args: ['--no-sandbox', '--disable-setuid-sandbox']
-        }
+        }//quitar esto para probar en local/
         );
 
         const page = await browser.newPage();
@@ -615,9 +596,10 @@ async function getGreeting(fechaActual, totalUsers, totalProfessionals, totalTic
     // Llamada a la API para generar contenido
 
     const result = await model.generateContent(prompt);
-    //console.log(prompt)
+
     const responseText = result.response.candidates[0]?.content.parts[0]?.text || "Sin etiqueta";
     //
-  
+    
+
     return (responseText);
 }
