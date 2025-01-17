@@ -19,17 +19,12 @@
   <link href="/vendor/aos/aos.css" rel="stylesheet">
   <link href="/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
   <link href="/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-
   <!-- Main CSS File -->
   <link href="/css/main.css" rel="stylesheet">
 </head>
 
-<body class="index-page">
- 
-
-  {{> navbar_page}} 
-   
-  {{#if errorMessage}}
+<body class="index-pages">
+ {{#if errorMessage}}
   <div class="alert-container">
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
       {{errorMessage}}
@@ -37,6 +32,13 @@
     </div>
   </div>
   {{/if}}
+  
+  <header id="header" class="header d-flex align-items-center fixed-top  ">
+    {{> navbar_page}}
+    <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+  </header>
+ 
+
 
 
 
@@ -113,10 +115,10 @@
 
       } catch (error) {
 
-       
+
         const errorMessage = "Correo o contraseña inválidos. Inténtalo de nuevo.";
         window.location.href = `/?message=${encodeURIComponent(errorMessage)}`;
-        
+
       }
     }
 
@@ -125,11 +127,6 @@
       const password = document.getElementById('passwordInput').value;
       login(email, password);
     });
-
-  
-
-
-
 
 
 
