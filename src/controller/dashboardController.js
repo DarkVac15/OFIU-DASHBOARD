@@ -450,11 +450,15 @@ exports.dataReports = async (req, res) => {
 
     const texto = String(message);
 
-
     // Segmentar texto en tres variables
-    const hallazgos = texto.match(/(?<=\*\*Hallazgos:\n)([\s\S]*?)(?=\n\*\*Recomendaciones:\*\*)/)[0].trim();
-    const recomendaciones = texto.match(/(?<=\*\*Recomendaciones:\*\*\n)([\s\S]*?)(?=\n\*\*Perspectivas Futuras:\*\*)/)[0].trim();
-    const perspectivasFuturas = texto.match(/(?<=\*\*Perspectivas Futuras:\*\*\n)([\s\S]*)/)[0].trim();
+    const hallazgosMatch = texto.match(/(?<=\*\*Hallazgos:\*\*\n)([\s\S]*?)(?=\n\*\*Recomendaciones:\*\*)/);
+    const recomendacionesMatch = texto.match(/(?<=\*\*Recomendaciones:\*\*\n)([\s\S]*?)(?=\n\*\*Perspectivas Futuras:\*\*)/);
+    const perspectivasFuturasMatch = texto.match(/(?<=\*\*Perspectivas Futuras:\*\*\n)([\s\S]*)/);
+
+    // Verificar si las coincidencias existen
+    const hallazgos = hallazgosMatch ? hallazgosMatch[0].trim() : "Hallazgos no encontrados";
+    const recomendaciones = recomendacionesMatch ? recomendacionesMatch[0].trim() : "Recomendaciones no encontradas";
+    const perspectivasFuturas = perspectivasFuturasMatch ? perspectivasFuturasMatch[0].trim() : "Perspectivas Futuras no encontradas";
 
 
     const formattedHallazgos = hallazgos
@@ -538,13 +542,15 @@ exports.generatePDF = async (req, res) => {
             executablePath: '/usr/bin/chromium-browser',
             headless: true,
             args: ['--no-sandbox', '--disable-setuid-sandbox']
-        }//quitar esto para probar en local/
+        } //quitar esto para probar en local*/
         );
 
         const page = await browser.newPage();
 
         // Navegar a la URL de la página de la cual deseas hacer el PDF
-        await page.goto(url, { waitUntil: 'networkidle0', timeout: 60000 });
+        await page.goto(url, {
+            waitUntil: 'networkidle0',timeout: 60000 
+        });
 
         // Generar el PDF
         const pdfBuffer = await page.pdf({
@@ -564,7 +570,7 @@ exports.generatePDF = async (req, res) => {
         res.end(pdfBuffer);
     } catch (error) {
         console.error("Error generando el PDF:", error);
-        res.status(500).send("Hubo un error al generar el PDF.");
+        res.status(500).send("Hubo un error al generar el PDF.", error);
     }
 };
 
@@ -599,7 +605,7 @@ async function getGreeting(fechaActual, totalUsers, totalProfessionals, totalTic
 
     const responseText = result.response.candidates[0]?.content.parts[0]?.text || "Sin etiqueta";
     //
-    
+
 
     return (responseText);
 }
