@@ -449,16 +449,17 @@ exports.dataReports = async (req, res) => {
     );
 
     const texto = String(message);
-
-    // Segmentar texto en tres variables
+    //console.log(texto)
+    // Expresiones regulares más flexibles
+    
     const hallazgosMatch = texto.match(/(?<=\*\*Hallazgos:\*\*\n)([\s\S]*?)(?=\n\*\*Recomendaciones:\*\*)/);
-    const recomendacionesMatch = texto.match(/(?<=\*\*Recomendaciones:\*\*\n)([\s\S]*?)(?=\n\*\*Perspectivas Futuras:\*\*)/);
-    const perspectivasFuturasMatch = texto.match(/(?<=\*\*Perspectivas Futuras:\*\*\n)([\s\S]*)/);
-
-    // Verificar si las coincidencias existen
-    const hallazgos = hallazgosMatch ? hallazgosMatch[0].trim() : "Hallazgos no encontrados";
-    const recomendaciones = recomendacionesMatch ? recomendacionesMatch[0].trim() : "Recomendaciones no encontradas";
-    const perspectivasFuturas = perspectivasFuturasMatch ? perspectivasFuturasMatch[0].trim() : "Perspectivas Futuras no encontradas";
+    const recomendacionesMatch = texto.match(/(?<=\*\*Recomendaciones:\*\*\n)([\s\S]*?)(?=\n\*\*Perspectivas futuras:\*\*)/i);
+    const perspectivasFuturasMatch = texto.match(/(?<=\*\*Perspectivas futuras:\*\*\n)([\s\S]*)/i);
+    
+    const hallazgos = hallazgosMatch ? hallazgosMatch[0].trim() : "No se encontraron hallazgos";
+    const recomendaciones = recomendacionesMatch ? recomendacionesMatch[0].trim() : "No se encontraron recomendaciones";
+    const perspectivasFuturas = perspectivasFuturasMatch ? perspectivasFuturasMatch[0].trim() : "No se encontraron perspectivas futuras";
+    
 
 
     const formattedHallazgos = hallazgos
@@ -549,7 +550,7 @@ exports.generatePDF = async (req, res) => {
 
         // Navegar a la URL de la página de la cual deseas hacer el PDF
         await page.goto(url, {
-            waitUntil: 'networkidle0',timeout: 60000 
+            waitUntil: 'networkidle0', timeout: 60000
         });
 
         // Generar el PDF
