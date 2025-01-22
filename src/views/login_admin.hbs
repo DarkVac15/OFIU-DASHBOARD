@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - OFIU</title>
+  <!-- Bootstrap -->
+
+  
+  <link rel="icon" href="/img/icon.ico" type="image/x-icon">
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+
+      color: #333;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .card {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary {
+      background-color: #70B7FB;
+      border-color: #70B7FB;
+    }
+
+    .btn-primary:hover {
+      background-color: #3A8DFF;
+      border-color: #3A8DFF;
+    }
+
+    .input-group-text {
+      background-color: #F3F8FE;
+      border-color: #70B7FB;
+    }
+
+    .form-control:focus {
+      box-shadow: 0 0 0 0.2rem rgba(112, 183, 251, 0.5);
+      border-color: #70B7FB;
+    }
+
+    .display-1 {
+      color: #70B7FB;
+      font-weight: 700;
+    }
+
+    a {
+      color: #3A8DFF;
+    }
+
+    a:hover {
+      text-decoration: none;
+      color: #70B7FB;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  {{#if errorMessage}}
+  <div class="alert-container">
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      {{errorMessage}}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  </div>
+  {{/if}}
+
+  <!-- Login Component -->
+  <div class="bg-dark py-5">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-6">
+          <div class="card bg-white p-4 p-md-5">
+            <div class="text-center mb-4">
+              <a href="#!">
+                <h1 class="display-1">OFIU</h1>
+              </a>
+            </div>
+            <form action="login-form">
+              <div class="row gy-3">
+                <div class="col-12">
+                  <label for="email" class="form-label">Correo electronico <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                        class="bi bi-envelope" viewBox="0 0 16 16">
+                        <path
+                          d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z" />
+                      </svg>
+                    </span>
+                    <input type="email" id="emailInput" class="form-control" placeholder="Ingresa tu email" required>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label for="password" class="form-label">Contraseña <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                        class="bi bi-key" viewBox="0 0 16 16">
+                        <path
+                          d="M0 8a4 4 0 0 1 7.465-2H14a.5.5 0 0 1 .354.146l1.5 1.5a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0L13 9.207l-.646.647a.5.5 0 0 1-.708 0L11 9.207l-.646.647a.5.5 0 0 1-.708 0L9 9.207l-.646.647A.5.5 0 0 1 8 10h-.535A4 4 0 0 1 0 8zm4-3a3 3 0 1 0 2.712 4.285A.5.5 0 0 1 7.163 9h.63l.853-.854a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.793-.793-1-1h-6.63a.5.5 0 0 1-.451-.285A3 3 0 0 0 4 5z" />
+                        <path d="M4 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+                      </svg>
+                    </span>
+                    <input type="password" id="passwordInput" class="form-control" placeholder="Ingresa tu contraseña"
+                      required>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="d-grid">
+                    <button class="btn btn-primary btn-lg" id="loginButton" type="button">Iniciar sesión</button>
+                  </div>
+                </div>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  <!-- Scroll to Error Alert -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+    import { getStorage } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDjA8ZMhvprgLTJelQtrFYceAKMD6dh9DM",
+      authDomain: "ofiuremake.firebaseapp.com",
+      projectId: "ofiuremake",
+      storageBucket: "ofiuremake.appspot.com",
+      messagingSenderId: "1071493213460",
+      appId: "1:1071493213460:web:2fd2032a757357283c6601",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const storage = getStorage(app);
+    const auth = getAuth(app);
+
+    //Exponer el storage y auth globalmente
+    window.firebaseStorage = storage;
+    window.firebaseAuth = auth;
+
+    async function login(email, password) {
+      try {
+        // Iniciar sesión en Firebase y obtener el token
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const idToken = await userCredential.user.getIdToken();
+
+        await fetch('/setToken', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: idToken })
+        });
+
+
+        window.location.href = '/dashboard';
+
+      } catch (error) {
+
+
+        const errorMessage = "Correo o contraseña inválidos. Inténtalo de nuevo.";
+        window.location.href = `/administracion?message=${encodeURIComponent(errorMessage)}`;
+
+      }
+    }
+
+    document.getElementById('loginButton')?.addEventListener('click', function () {
+      const email = document.getElementById('emailInput').value;
+      const password = document.getElementById('passwordInput').value;
+      login(email, password);
+    });
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const alertContainer = document.querySelector('.alert-container');
+      if (alertContainer) {
+        window.scrollTo({ top: alertContainer.offsetTop, behavior: 'smooth' });
+      }
+    });
+
+
+
+
+
+
+  </script>
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

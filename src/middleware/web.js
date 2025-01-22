@@ -8,7 +8,7 @@ const verifyToken = async (req, res, next) => {
 
   if (!token) {
     const errorMessage = "Token no válido. Por favor, inicia sesión.";
-    return res.redirect(`/?message=${encodeURIComponent(errorMessage)}`);
+    return res.redirect(`/administracion?message=${encodeURIComponent(errorMessage)}`);
   }
 
   try {
@@ -21,13 +21,13 @@ const verifyToken = async (req, res, next) => {
     } else {
        // return res.status(403).json({ message: 'Acceso denegado. Se requiere rol de administrador' });
         const errorMessage = "Acceso denegado. Se requiere rol de administrador.";
-    return res.redirect(`/?message=${encodeURIComponent(errorMessage)}`);
+    return res.redirect(`/administracion?message=${encodeURIComponent(errorMessage)}`);
        
     }
   } catch (error) {
    
     const errorMessage = "Token inválido.";
-    return res.redirect(`/?message=${encodeURIComponent(errorMessage)}`);
+    return res.redirect(`/administracion?message=${encodeURIComponent(errorMessage)}`);
   }
 };
 

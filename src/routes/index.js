@@ -1,10 +1,20 @@
 const express = require('express');
 const router = express.Router();
+const { db, auth } = require("../config/firebase");
 //import jwt from 'jsonwebtoken';
 
 const mailController = require('../controller/mailController');
 
+router.get('/administracion',  (req, res) =>{
+  
+  const message = req.query.message || null;
+    res.render('login_admin',{
+      errorMessage: message 
+    });
+});
 
+
+   
 router.get('/', (req, res) => {
   
 const message = req.query.message || null;
@@ -105,10 +115,9 @@ router.post('/logout', (req, res) => {
 
 
 //colocar un rol admi aun user
-
 /*
 router.get('/set-admin', async (req, res) => {
-  const uid = "9fKtiZmpQEb7B05sK73E3Xlhls83";
+  const uid = "on6T6LHnz7OppfvsAQNPCXT8mGK2";
 
   if (!uid) {
     return res.status(400).json({ message: 'UID es requerido' });
