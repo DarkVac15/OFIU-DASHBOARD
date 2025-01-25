@@ -253,7 +253,11 @@ exports.dataDashboard = async (req, res) => {
         locationChartLabels: jsonify(Object.keys(filteredLocationCount)),
         locationChartData: jsonify(Object.values(filteredLocationCount)),
         labelCategoryProf: jsonify(Object.keys(subcategoryCount)),
-        valueProf: jsonify(Object.values(subcategoryCount))
+        valueProf: jsonify(Object.values(subcategoryCount)),
+
+        isDashboard: true,
+        isUser: false,
+        isTags: false
     });
 };
 

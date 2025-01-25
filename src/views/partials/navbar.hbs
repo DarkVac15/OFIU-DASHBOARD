@@ -8,16 +8,21 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="/dashboard">Dashboard</a>
-                </li>
-                 <li class="nav-item">
-                    <a class="nav-link" href="/user">Gestion de usuario</a>
+                    <a class="nav-link  nav-link {{#if isDashboard}}active{{/if}}" aria-current="page"
+                        href="/dashboard">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/etiquetas">Etiquetas</a>
+                    <a class="nav-link  nav-link {{#if isUser}}active{{/if}}" href="/user">Gestion de usuario</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link  nav-link {{#if isTags}}active{{/if}}" href="/etiquetas">Etiquetas</a>
                 </li>
             </ul>
-            <button id="logoutButton" class="btn btn-outline-success" type="button">Logout</button>
+            <button id="logoutButton" class="btn btn-danger rounded-pill px-4 py-2 fw-bold" type="button">
+                <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+            </button>
+
+
 
         </div>
     </div>

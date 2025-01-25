@@ -35,9 +35,9 @@ router.get('/', async (req, res) => {
                         subcategory: subDoc.id, // ID del documento de la subcategoría
                         description: subcategoryData.title, // Título de la subcategoría
                         image: subcategoryData.image, // Imagen de la subcategoría
-                   
+
                     });
-                
+
                 });
             }
         }
@@ -46,7 +46,11 @@ router.get('/', async (req, res) => {
             title: 'Gestión de Etiquetas',
             etiquetas,
             layout: 'main',
-            showNavbar: true
+            showNavbar: true,
+
+            isDashboard: false,
+            isUser: false,
+            isTags: true
         });
     } catch (error) {
         console.error('Error al obtener categorías y subcategorías:', error);
@@ -61,7 +65,7 @@ router.post('/add-category', async (req, res) => {
         await db.collection('category').doc(category).set({
             name: category, // Nombre de la categoría
             image: image  // Imagen de la categoría
-          //  subcategories: [] // Inicializamos la subcolección de subcategorías como un arreglo vacío
+            //  subcategories: [] // Inicializamos la subcolección de subcategorías como un arreglo vacío
         });
 
         res.status(201).send('Categoría agregada'); // Responde con un estado 201
@@ -71,10 +75,10 @@ router.post('/add-category', async (req, res) => {
     }
 });
 router.post('/add-subcategory', async (req, res) => {
-    const { categoriaId, subcategoria,  image } = req.body;
-    
+    const { categoriaId, subcategoria, image } = req.body;
+
     // Validar que todos los campos necesarios estén presentes
-    if (!categoriaId || !subcategoria  || !image) {
+    if (!categoriaId || !subcategoria || !image) {
         return res.status(400).send('Todos los campos son requeridos');
     }
 
@@ -88,7 +92,7 @@ router.post('/add-subcategory', async (req, res) => {
         // Agregar la subcategoría con los datos recibidos
         await subcategoryRef.set({
             title: subcategoria,    // Nombre de la subcategoría
-          //  description: descripcion, // Descripción de la subcategoría
+            //  description: descripcion, // Descripción de la subcategoría
             image: image            // Imagen de la subcategoría
         });
 

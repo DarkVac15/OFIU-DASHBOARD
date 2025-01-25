@@ -1,70 +1,76 @@
-<div class="d-flex justify-content-between align-items-center bg-dark text-light p-3">
-    <h1>{{title}}</h1>
-    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#agregarCategoriaModal">
-        Agregar Categoría
-    </button>
-</div>
+<div class="ms-5 me-5 bg-dark text-light p-4 rounded">
+    <div class="d-flex justify-content-between align-items-center bg-dark text-light p-3">
 
-<table class="table table-dark table-striped">
-    <thead>
-        <tr>
-            <th scope="col">#</th>
-            <th scope="col">Categoría</th>
-            <th scope="col">Subcategoría</th>
-          
-            <th scope="col">Imagen</th>
-            <th scope="col">Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {{#each etiquetas}}
-        <tr>
-            <th scope="row">{{@index}}</th>
-            <td>{{this.category}}</td>
-           
-            <td>{{this.description}}</td>
-            <td><img src="{{this.image}}" alt="{{this.subcategory}}" style="width: 50px;"></td>
-            <td>
-                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#agregarSubcategoriaModal"
-                    onclick="setCategoriaId('{{this.category}}')">Agregar Subcategoría</button>
-                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
-                    onclick="setSubcategoriaId('{{this.category}}', '{{this.subcategory}}','{{ this.description }}')">Eliminar</button>
-            </td>
-        </tr>
-        {{else}}
-        <tr>
-            <td colspan="6" class="text-center">No hay etiquetas disponibles.</td>
-        </tr>
-        {{/each}}
-    </tbody>
-</table>
 
-<!-- Modal para agregar categoría -->
-<div class="modal fade" id="agregarCategoriaModal" tabindex="-1" aria-labelledby="agregarCategoriaModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content bg-dark text-light">
-            <div class="modal-header">
-                <h5 class="modal-title" id="agregarCategoriaModalLabel">Agregar Nueva Categoría</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="agregarCategoriaForm">
-                    <div class="mb-3">
-                        <label for="category" class="form-label">Categoría</label>
-                        <input type="text" class="form-control" id="category" name="category" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="imagen" class="form-label">Subir Imagen</label>
-                        <input type="file" class="form-control" id="imagen" name="imagenCategoria" required>
-                    </div>
-                    <button type="submit" class="btn btn-success">Agregar Categoría</button>
-                </form>
+        <div class=" mb-4">
+            <h3>{{title}}</h3>
+            <h5>Aquí podrás gestionar las distintas etiquetas del proyecto</h5>
+        </div>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#agregarCategoriaModal">
+            Agregar Categoría
+        </button>
+    </div>
+
+    <table class="table table-dark table-striped">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Categoría</th>
+                <th scope="col">Subcategoría</th>
+
+                <th scope="col">Imagen</th>
+                <th scope="col">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each etiquetas}}
+            <tr>
+                <th scope="row">{{@index}}</th>
+                <td>{{this.category}}</td>
+
+                <td>{{this.description}}</td>
+                <td><img src="{{this.image}}" alt="{{this.subcategory}}" style="width: 50px;"></td>
+                <td>
+                    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#agregarSubcategoriaModal"
+                        onclick="setCategoriaId('{{this.category}}')">Agregar Subcategoría</button>
+                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
+                        onclick="setSubcategoriaId('{{this.category}}', '{{this.subcategory}}','{{ this.description }}')">Eliminar</button>
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="6" class="text-center">No hay etiquetas disponibles.</td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <!-- Modal para agregar categoría -->
+    <div class="modal fade" id="agregarCategoriaModal" tabindex="-1" aria-labelledby="agregarCategoriaModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="agregarCategoriaModalLabel">Agregar Nueva Categoría</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="agregarCategoriaForm">
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Categoría</label>
+                            <input type="text" class="form-control" id="category" name="category" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="imagen" class="form-label">Subir Imagen</label>
+                            <input type="file" class="form-control" id="imagen" name="imagenCategoria" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">Agregar Categoría</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
 <!-- Modal para agregar subcategoría -->
 <div class="modal fade" id="agregarSubcategoriaModal" tabindex="-1" aria-labelledby="agregarSubcategoriaModalLabel"
     aria-hidden="true">
@@ -81,7 +87,7 @@
                         <label for="subcategoria" class="form-label">Nombre de la Subcategoría</label>
                         <input type="text" class="form-control" id="subcategoria" name="subcategoria" required>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="imagen" class="form-label">Subir Imagen</label>
                         <input type="file" class="form-control" id="imagen" name="imagen" required>
@@ -136,7 +142,7 @@
 
     document.getElementById('agregarCategoriaForm').addEventListener('submit', async function (e) {
         e.preventDefault(); // Prevenir el comportamiento por defecto del formulario
-    const formData = new FormData(this);
+        const formData = new FormData(this);
         const nombreCategoria = formData.get('category');
         const imagenCategoriaFile = formData.get('imagenCategoria'); // Archivo de imagen de la categoría
 
@@ -226,10 +232,10 @@
     let subcategoryIdToName = null;
 
     // Función para establecer los IDs de categoría y subcategoría a eliminar
-    window.setSubcategoriaId = function (categoryId, subcategoryId,description) {
+    window.setSubcategoriaId = function (categoryId, subcategoryId, description) {
         categoryIdToDelete = categoryId; // ID de la categoría (ej. 'construccion')
         subcategoryIdToDelete = subcategoryId; // ID de la subcategoría (ej. 'carpinteria')
-        subcategoryIdToName= description;
+        subcategoryIdToName = description;
     };
 
     // Evento para manejar el clic en el botón de eliminar

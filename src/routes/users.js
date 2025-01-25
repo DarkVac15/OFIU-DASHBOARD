@@ -5,7 +5,7 @@ const userController = require('../controller/mailController');
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-    const excludedUID ="9fKtiZmpQEb7B05sK73E3Xlhls83"// req.user.uid; // UID del usuario que deseas omitir
+    const excludedUID = "on6T6LHnz7OppfvsAQNPCXT8mGK2"// req.user.uid; // UID del usuario que deseas omitir
     //  console.log(excludedUID);
     const usersList = [];
 
@@ -28,9 +28,14 @@ router.get('/', async (req, res) => {
 
         res.render('usermanagement', {
             title: 'Gestión de usuarios',
+
             usersList: filteredUsers,
             layout: 'main',
-            showNavbar: true
+            showNavbar: true,
+
+            isDashboard: false,
+            isUser: true,
+            isTags: false
         });
 
     } catch (error) {
@@ -42,7 +47,7 @@ router.get('/', async (req, res) => {
 // Ejemplo de controlador
 router.post('/toggle-user-status', userController.toggleUserStatus);
 
-router.post('/toggle-user-status1',userController.toggleUserStatus, async (req, res) => {
+router.post('/toggle-user-status1', userController.toggleUserStatus, async (req, res) => {
     const { uid, action } = req.body;
 
     try {
