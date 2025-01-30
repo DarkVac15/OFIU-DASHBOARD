@@ -2,8 +2,18 @@ const { db, auth } = require("../config/firebase");
 const puppeteer = require('puppeteer');
 
 
+let userArray = [];
+let profArray = [];
+let userHArray = [];
+let ticketArray = [];
+
 exports.dataDashboard = async (req, res) => {
 
+     userArray = [];
+     profArray = [];
+     userHArray = [];
+     ticketArray = [];
+    
     let totalProfessionals = 0;
     let categoryCount = {};
 
@@ -41,28 +51,45 @@ exports.dataDashboard = async (req, res) => {
         });
     }
 
-
+    ///user vliente
     let usersQuery = db.collection('users');
     if (startDate && endDate) {
         usersQuery = usersQuery.where('createdAt', '>=', startDate).where('createdAt', '<=', endDate);
     }
 
     const usersSnapshot = await usersQuery.get();
-    const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+    const usersData = usersSnapshot.docs.map(doc => ({
+        id: doc.id,
+        data: doc.data()
+
+
+    }));
 
     // Obtener usuarios normales
     const getUsersByDateRange = (usersData) => {
         const usersByDate = {};
 
         usersData.forEach((user) => {
+
+
             const createdAt = user.data.createdAt.toDate().toLocaleString('en-CA', { timeZone: 'America/Bogota' }).split(',')[0];
 
             if (!usersByDate[createdAt]) {
+
                 usersByDate[createdAt] = 1;
             } else {
                 usersByDate[createdAt] += 1;
             }
+
+            //guardar datos para mostar en un mdal
+            userArray.push({
+                name: user.data.name,
+                email: user.data.email,
+                createdAt: createdAt
+            });
+
         });
+
 
         const sortedDates = Object.keys(usersByDate).sort();
         const labels = sortedDates;
@@ -71,21 +98,32 @@ exports.dataDashboard = async (req, res) => {
         return { labels, data };
     };
 
+
+
+
     const { labels: userTrendLabels, data: userTrendData } = getUsersByDateRange(usersData);
+
+
 
     //Obtener profesionales en la nueva colección "professionals"
     const getProfessionalsByDateRange = async () => {
         const professionalsByDate = {};
 
-        const professionalsSnapshot = await db.collection('professionals').get();
-        professionalsSnapshot.forEach(doc => {
+
+        const professionalsSnapshot = await db.collection('professionals')
+            .where('createdAt', '>=', startDate)
+            .where('createdAt', '<=', endDate)
+            .get();
+
+        // Usamos for...of en lugar de forEach para esperar a las promesas
+        for (const doc of professionalsSnapshot.docs) {
             const professionalData = doc.data();
+            const professionalId = doc.id; // La ID del documento
 
             const createdAt = professionalData.createdAt
                 ?.toDate()
                 .toLocaleString('en-CA', { timeZone: 'America/Bogota' })
                 .split(',')[0];
-
 
             if (createdAt) {
                 if (!professionalsByDate[createdAt]) {
@@ -93,17 +131,43 @@ exports.dataDashboard = async (req, res) => {
                 } else {
                     professionalsByDate[createdAt] += 1;
                 }
-            }
-        });
 
+            }
+            // Obtener el documento del usuario de forma asincrónica
+            const userDocRef = db.collection('users').doc(professionalId); // Se asume que 'doc' es el ID del usuario
+            const userDoc = await userDocRef.get();
+
+            if (userDoc.exists) {
+                
+                profArray.push({
+                    name: userDoc.data().name, // Accede a los datos del usuario correctamente
+                    email: userDoc.data().email,
+                    city: professionalData.city,
+                    phone: professionalData.phone,
+                    skills:professionalData.skills,
+                    createdAt: createdAt
+                });
+            } else {
+                console.log(`Usuario no encontrado con ID: ${professionalData.doc}`);
+            }//
+
+
+
+        }
+
+        // Ordenar fechas y preparar los datos para el gráfico
         const sortedDates = Object.keys(professionalsByDate).sort();
         const labels = sortedDates;
         const data = sortedDates.map(date => professionalsByDate[date]);
 
-        return { labels, data };
+        // Puedes retornar los resultados si los necesitas para la vista o el análisis posterior
+        return { labels, data }; // Devolver el array de usuarios también
     };
 
+
     const { labels: professionalTrendLabels, data: professionalTrendData } = await getProfessionalsByDateRange();
+
+
 
     let totalUsers = usersData.length;
 
@@ -163,6 +227,7 @@ exports.dataDashboard = async (req, res) => {
             if (state === "Abierto" && location) {
                 locationCount[location] = (locationCount[location] || 0) + 1;
             }
+
             // Contar las categorías (subcategorías) dentro de 'tags'
             const tags = ticketData.tags;
             if (tags && Array.isArray(tags)) {
@@ -173,7 +238,18 @@ exports.dataDashboard = async (req, res) => {
             }
 
 
+            //guardar en el array los datos ;v
+            ticketArray.push({
+                title: ticketData.title,
+                createdAt: formattedDate,
+                cityTicket: ticketData.cityTicket,
+                state: ticketData.state,
+                tags: ticketData.tags
+            })
+
         }
+
+
 
     });
     const sortedDates = Object.keys(ticketsByDate1).sort();
@@ -194,7 +270,20 @@ exports.dataDashboard = async (req, res) => {
         nextPageToken = users.pageToken;
     } while (nextPageToken);
 
+
     const totalDisabledUsers = usersAuth.filter(user => user.disabled).length;
+    const disabledUsers = usersAuth.filter(user => user.disabled);
+    disabledUsers.forEach(user => {
+        userHArray.push({
+            name: user.displayName,
+            email: user.email       
+        });
+
+    });
+
+
+
+
 
     const filterData = (data) => {
         return Object.entries(data).filter(([key, value]) => value > 0).reduce((acc, [key, value]) => {
@@ -213,25 +302,37 @@ exports.dataDashboard = async (req, res) => {
         {
             title_card: 'Usuarios Registrados',
             value: totalUsers,
-            description: startDate && endDate ? `Usuarios registrados del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Usuarios totales registrados'
+            description: startDate && endDate ? `Usuarios registrados del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Usuarios totales registrados',
+            type: 'users' // Tipo para saber qué datos cargar en el modal
         },
         {
             title_card: 'Profesionales Registrados',
             value: totalProfessionals,
             description: startDate && endDate ? `Profesionales registrados del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Profesionales totales registrados'
+            , type: 'professionals' // Tipo para saber qué datos cargar en el modal
         },
         {
             title_card: 'Tickets Creados',
             value: totalTickets,
             description: startDate && endDate ? `Tickets creados del ${startDate.toLocaleDateString()} al ${endDate.toLocaleDateString()}` : 'Tickets totales creados'
+            , type: 'tickets'
         },
         {
             title_card: 'Usuarios Inhabilitados',
             value: totalDisabledUsers,
-            description: 'Total de usuarios inhabilitados'
+            description: 'Total de usuarios inhabilitados',
+            type: 'disabled-users'
         }
     ];
+
+    // Mostrar los datos en la consola
+    //console.log("Datos de los usuarios:", userArray);
+    /// console.log("Datos de los profesionales:", profArray);
+   // console.log("Datos de los tickets:", ticketArray);
+    //console.log("Datos de los usuarios inhabilirado :", userHArray);
+
     const jsonify = (data) => JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+
     res.render('dashboard', {
         metrics,
         layout: 'main',
@@ -255,11 +356,21 @@ exports.dataDashboard = async (req, res) => {
         labelCategoryProf: jsonify(Object.keys(subcategoryCount)),
         valueProf: jsonify(Object.values(subcategoryCount)),
 
+        dataUser: jsonify(userArray),
+        dataProf:jsonify( profArray),
+        userBloq: jsonify(userHArray),
+        dataticket:jsonify( ticketArray),
+
+
         isDashboard: true,
         isUser: false,
         isTags: false
     });
 };
+
+
+
+
 
 
 exports.dataReports = async (req, res) => {
@@ -324,7 +435,14 @@ exports.dataReports = async (req, res) => {
     // Obtener profesionales en la nueva colección "professionals"
     const getProfessionalsByDateRange = async () => {
         const professionalsByDate = {};
-        const professionalsSnapshot = await db.collection('professionals').get();
+
+
+
+        const professionalsSnapshot = await db.collection('professionals')
+            .where('createdAt', '>=', startDate)
+            .where('createdAt', '<=', endDate)
+            .get();
+
         professionalsSnapshot.forEach(doc => {
             const professionalData = doc.data();
             const createdAt = professionalData.createdAt?.toDate().toLocaleString('en-CA', { timeZone: 'America/Bogota' }).split(',')[0];
@@ -350,7 +468,11 @@ exports.dataReports = async (req, res) => {
     let cityCount = {};
     let totalTickets = 0;
     // Contar profesionales
-    const professionalsSnapshot = await db.collection('professionals').get();
+
+    const professionalsSnapshot = await db.collection('professionals')
+        .where('createdAt', '>=', startDate)
+        .where('createdAt', '<=', endDate)
+        .get();
     professionalsSnapshot.forEach(doc => {
         const professionalData = doc.data();
         const city = professionalData.city;
@@ -455,15 +577,15 @@ exports.dataReports = async (req, res) => {
     const texto = String(message);
     //console.log(texto)
     // Expresiones regulares más flexibles
-    
+
     const hallazgosMatch = texto.match(/(?<=\*\*Hallazgos:\*\*\n)([\s\S]*?)(?=\n\*\*Recomendaciones:\*\*)/);
     const recomendacionesMatch = texto.match(/(?<=\*\*Recomendaciones:\*\*\n)([\s\S]*?)(?=\n\*\*Perspectivas futuras:\*\*)/i);
     const perspectivasFuturasMatch = texto.match(/(?<=\*\*Perspectivas futuras:\*\*\n)([\s\S]*)/i);
-    
+
     const hallazgos = hallazgosMatch ? hallazgosMatch[0].trim() : "No se encontraron hallazgos";
     const recomendaciones = recomendacionesMatch ? recomendacionesMatch[0].trim() : "No se encontraron recomendaciones";
     const perspectivasFuturas = perspectivasFuturasMatch ? perspectivasFuturasMatch[0].trim() : "No se encontraron perspectivas futuras";
-    
+
 
 
     const formattedHallazgos = hallazgos
@@ -529,6 +651,11 @@ exports.dataReports = async (req, res) => {
 };
 
 
+
+
+
+
+
 exports.generatePDF = async (req, res) => {
 
     try {
@@ -539,11 +666,10 @@ exports.generatePDF = async (req, res) => {
             : `http://localhost:3000/dashboard/export-pdf`; // URL sin parámetros si no se pasan fechas
 
 
-        //    console.log('Token obtenido:', req.cookies.token);
 
 
         // Iniciar Puppeteer
-        const browser = await puppeteer.launch({
+        const browser = await puppeteer.launch(/*{
             executablePath: '/usr/bin/chromium-browser',
             headless: true,
             args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -554,7 +680,8 @@ exports.generatePDF = async (req, res) => {
 
         // Navegar a la URL de la página de la cual deseas hacer el PDF
         await page.goto(url, {
-            waitUntil: 'networkidle0', timeout: 60000
+            waitUntil: 'domcontentloaded',
+            timeout: 120000
         });
 
         // Generar el PDF
@@ -605,12 +732,7 @@ async function getGreeting(fechaActual, totalUsers, totalProfessionals, totalTic
    Proporciona hallazgos, recomendaciones y perspectivas futuras basadas en estos datos, y después de cada punto coloca "\n"
  `;
     // Llamada a la API para generar contenido
-
     const result = await model.generateContent(prompt);
-
     const responseText = result.response.candidates[0]?.content.parts[0]?.text || "Sin etiqueta";
-    //
-
-
     return (responseText);
 }

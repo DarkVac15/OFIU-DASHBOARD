@@ -1,7 +1,27 @@
+<!-- Modal -->
+<div class="modal fade" id="generalModal" tabindex="-1" aria-labelledby="generalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="generalModalLabel">Detalles</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modalBodyContent">
+                <!-- Aquí se cargará la tabla dinámicamente -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 <div class="row">
     {{#each metrics}}
     <div class="col-md-4 mb-4">
-        <div class="card text-white bg-dark">
+        <div class="card text-white bg-dark" data-type="{{this.type}}" id="card-{{this.type}}">
             <div class="card-body">
                 <h5 class="card-title">{{this.title_card}}</h5>
 
@@ -36,9 +56,9 @@
     </div>
     <!-- Agrega un lienzo para el gráfico -->
     <div class="col-md-4 text-white bg-dark">
-     <h2> Distribución de Profesionales por etiquetas </h2>
-<canvas id="professionalsPieChart"></canvas>
-</div>
+        <h2> Distribución de Profesionales por etiquetas </h2>
+        <canvas id="professionalsPieChart"></canvas>
+    </div>
 </div>
 
 <div class="row">
@@ -82,43 +102,128 @@
 
 
 <script>
- // Recupera los datos enviados desde el backend
-   // Configuración del gráfico de pastel
-  const ctxpastel = document.getElementById('professionalsPieChart').getContext('2d');
-  new Chart(ctxpastel, {
-    type: 'pie',
-    data: {
-     // Las categorías como etiquetas
-       labels: JSON.parse('{{{labelCategoryProf}}}'),
-      datasets: [{
-      //  data: counts, // Los valores correspondientes
-         data: JSON.parse('{{{valueProf}}}'),
-        backgroundColor: [
-          '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', 
-          '#FF9F40', '#E7E9ED', '#FFC0CB', '#00FA9A', '#FFD700'
-        ], // Colores de cada porción
-        borderColor: '#ffffff',
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'right'
-        },
-        tooltip: {
-          callbacks: {
-            label: function(tooltipItem) {
-              const label = tooltipItem.label || '';
-              const value = tooltipItem.raw;
-              return `${label}: ${value} profesionales`;
-            }
-          }
+    const dataUser = JSON.parse('{{{dataUser}}}') || [];
+    const dataProf = JSON.parse('{{{dataProf}}}') || [];
+    const userBloq = JSON.parse('{{{userBloq}}}') || [];
+    const dataticket = JSON.parse('{{{dataticket}}}') || [];
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".card").forEach(card => {
+            card.addEventListener("click", function () {
+                const type = this.getAttribute("data-type"); // Obtiene el tipo de tarjeta
+                if (type) {
+                
+                    showData(type); // Llama a la función para mostrar los datos
+                }
+            });
+        });
+    });
+
+
+    function showData(type) {
+        let data = [];
+        let tableHeaders = "";
+
+        // Seleccionamos el array de datos correspondiente
+        switch (type) {
+            case "users":
+                data = dataUser;
+                tableHeaders = "<th>Nombre</th><th>Email</th><th>Fecha de registro</th>";
+                break;
+            case "professionals":
+                data = dataProf;
+                tableHeaders = "<th>Nombre</th><th>Email</th><th>Ciudad</th><th>Celular</th><th>Habilidades</th><th>Fecha de registro</th>";
+                break;
+            case "disabled-users":
+                data = userBloq;
+                tableHeaders = "<th>Nombre</th><th>Email</th>";
+                break;
+            case "tickets":
+                data = dataticket;
+                tableHeaders = "<th>Título</th><th>Fecha de creacion</th><th>Estado</th><th>Ciudad de trabajo</th><th>Etiquetas</th>";
+                break;
+            default:
+                data = [];
         }
-      }
+
+        let tableContent = `
+            <table class="table table-striped">
+                <thead>
+                    <tr>${tableHeaders}</tr>
+                </thead>
+                <tbody>
+        `;
+
+        data.forEach(item => {
+            tableContent += "<tr>";
+            if (type === "users") {
+                tableContent += `<td>${item.name}</td><td>${item.email}</td><td>${item.createdAt}</td>`;
+
+            } else if (type === "professionals") {
+                tableContent += `<td>${item.name}</td><td>${item.email}</td><td>${item.city || 'N/A'}</td><td>${item.phone}</td><th>${item.skills}</th><th>${item.createdAt}</th>`;
+
+            } else if (type === "blockedUsers") {
+                tableContent += `<td>${item.name}</td><td>${item.email}</td>`;
+
+            } else if (type === "tickets") {
+                tableContent += `<td>${item.title}</td><td>${item.createdAt}</td><td>${item.state}</td><td>${item.cityTicket}</td><th>${item.tags}</th>`;
+            }
+            tableContent += "</tr>";
+        });
+
+        tableContent += "</tbody></table>";
+
+        // Insertamos la tabla en el modal
+        document.getElementById("modalBodyContent").innerHTML = tableContent;
+
+        // Mostramos el modal
+        let modal = new bootstrap.Modal(document.getElementById("generalModal"));
+        modal.show();
     }
-  });
+
+
+
+
+
+
+    // Recupera los datos enviados desde el backend
+    // Configuración del gráfico de pastel
+    const ctxpastel = document.getElementById('professionalsPieChart').getContext('2d');
+    new Chart(ctxpastel, {
+        type: 'pie',
+        data: {
+            // Las categorías como etiquetas
+            labels: JSON.parse('{{{labelCategoryProf}}}'),
+            datasets: [{
+                //  data: counts, // Los valores correspondientes
+                data: JSON.parse('{{{valueProf}}}'),
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                    '#FF9F40', '#E7E9ED', '#FFC0CB', '#00FA9A', '#FFD700'
+                ], // Colores de cada porción
+                borderColor: '#ffffff',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (tooltipItem) {
+                            const label = tooltipItem.label || '';
+                            const value = tooltipItem.raw;
+                            return `${label}: ${value} profesionales`;
+                        }
+                    }
+                }
+            }
+        }
+    });
 
 
     // Coordenadas de las ciudades
@@ -126,7 +231,7 @@
         "Espinal": { lat: 4.14924, lng: -74.88429 },
         "Girardot": { lat: 4.30079, lng: -74.80754 },
         "Guamo": { lat: 4.03078, lng: -74.9701 },
-         "Flandes": { lat: 4.29005, lng: -74.81612 }
+        "Flandes": { lat: 4.29005, lng: -74.81612 }
     };
 
     // Ubicaciones de los trabajos (ciudades) y el número de trabajos en cada ciudad
@@ -284,10 +389,6 @@
         }
     }
     });
-
-
-
-
     // Gráfico de Barras para la Ciudad
     const ctxCity = document.getElementById('cityChart').getContext('2d');
     const cityChart = new Chart(ctxCity, {
@@ -353,5 +454,5 @@
             }
         }
     });
-  
+
 </script>
