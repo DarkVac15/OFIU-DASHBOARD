@@ -1,5 +1,6 @@
 const { db, auth } = require("../config/firebase");
 const puppeteer = require('puppeteer');
+const moment = require('moment-timezone');
 
 
 let userArray = [];
@@ -7,26 +8,50 @@ let profArray = [];
 let userHArray = [];
 let ticketArray = [];
 
+
+
+let startDate = moment().tz('America/Bogota').format('YYYY-MM-DD HH:mm:ss');
+let endDate = moment().tz('America/Bogota').format('YYYY-MM-DD HH:mm:ss');;  // Hasta el final del día
+const fechaActual = moment().tz('America/Bogota').format('YYYY-MM-DD HH:mm:ss');
+
+let filteredStateCount = null;
+let filteredCityCount = null;
+let userTrendLabels, userTrendData = null;
+let professionalTrendLabels, professionalTrendData = null;
+let ticketTrendLabels = null;
+let ticketTrendData = null;
+let filteredLocationCount = {};
+    filteredLocationCount   
+let subcategoryCount = {};
+
+let filteredLocationCountTicket = null;
+let categoryCount = {};
+//totales
+let totalUsers, totalProfessionals, totalTickets, totalDisabledUsers;
+
+let filteredCategoryCount = null;
+
 exports.dataDashboard = async (req, res) => {
 
-     userArray = [];
-     profArray = [];
-     userHArray = [];
-     ticketArray = [];
-    
-    let totalProfessionals = 0;
-    let categoryCount = {};
+    userArray = [];
+    profArray = [];
+    userHArray = [];
+    ticketArray = [];
+
+
+    totalProfessionals = 0;
+
 
     let stateCount = {};
     let cityCount = {};
-    let totalTickets = 0;
+    totalTickets = 0;
     let locationCount = {};
-    // let totalUsers = 0;
+    totalUsers = 0;
 
     // Ajustar startDate y endDate a la zona horaria de Bogotá (UTC-5)
     // Obtén las fechas del query string
-    const startDate = req.query.startDate ? new Date(req.query.startDate + "T00:00:00Z") : null; // Considerar UTC
-    const endDate = req.query.endDate ? new Date(req.query.endDate + "T23:59:59Z") : null;  // Hasta el final del día
+    startDate = req.query.startDate ? new Date(req.query.startDate + "T00:00:00Z") : null; // Considerar UTC
+    endDate = req.query.endDate ? new Date(req.query.endDate + "T23:59:59Z") : null;  // Hasta el final del día
 
     // Ajustar las fechas a la zona horaria de Bogotá (UTC-5)
     if (startDate) {
@@ -100,8 +125,7 @@ exports.dataDashboard = async (req, res) => {
 
 
 
-
-    const { labels: userTrendLabels, data: userTrendData } = getUsersByDateRange(usersData);
+    ({ labels: userTrendLabels, data: userTrendData } = getUsersByDateRange(usersData));
 
 
 
@@ -109,11 +133,27 @@ exports.dataDashboard = async (req, res) => {
     const getProfessionalsByDateRange = async () => {
         const professionalsByDate = {};
 
+        let query = db.collection('professionals');
 
-        const professionalsSnapshot = await db.collection('professionals')
+        // Filtro para excluir documentos donde createdAt sea null
+        query = query.where('createdAt', '!=', null);
+
+        // Añade filtros de fecha solo si startDate y endDate no son null
+        if (startDate !== null && startDate !== undefined) {
+            query = query.where('createdAt', '>=', startDate);
+        }
+
+        if (endDate !== null && endDate !== undefined) {
+            query = query.where('createdAt', '<=', endDate);
+        }
+
+        // Ejecuta la consulta
+        const professionalsSnapshot = await query.get();
+        /*const professionalsSnapshot = await db.collection('professionals')
             .where('createdAt', '>=', startDate)
             .where('createdAt', '<=', endDate)
             .get();
+*/
 
         // Usamos for...of en lugar de forEach para esperar a las promesas
         for (const doc of professionalsSnapshot.docs) {
@@ -138,13 +178,13 @@ exports.dataDashboard = async (req, res) => {
             const userDoc = await userDocRef.get();
 
             if (userDoc.exists) {
-                
+
                 profArray.push({
                     name: userDoc.data().name, // Accede a los datos del usuario correctamente
                     email: userDoc.data().email,
                     city: professionalData.city,
                     phone: professionalData.phone,
-                    skills:professionalData.skills,
+                    skills: professionalData.skills,
                     createdAt: createdAt
                 });
             } else {
@@ -165,13 +205,13 @@ exports.dataDashboard = async (req, res) => {
     };
 
 
-    const { labels: professionalTrendLabels, data: professionalTrendData } = await getProfessionalsByDateRange();
+    ({ labels: professionalTrendLabels, data: professionalTrendData } = await getProfessionalsByDateRange());
 
 
 
-    let totalUsers = usersData.length;
+    totalUsers = usersData.length;
 
-    let subcategoryCount = {};  // Objeto para contar la cantidad de profesionales por subcategoría
+    // Objeto para contar la cantidad de profesionales por subcategoría
 
 
     // Contar profesionales desde la nueva colección "professionals"
@@ -225,7 +265,7 @@ exports.dataDashboard = async (req, res) => {
             }
             const location = ticketData.cityTicket;
             if (state === "Abierto" && location) {
-                locationCount[location] = (locationCount[location] || 0) + 1;
+                locationCount[location] = (locationCount[location] || 0) +  1;
             }
 
             // Contar las categorías (subcategorías) dentro de 'tags'
@@ -253,8 +293,8 @@ exports.dataDashboard = async (req, res) => {
 
     });
     const sortedDates = Object.keys(ticketsByDate1).sort();
-    const ticketTrendLabels = sortedDates;
-    const ticketTrendData = sortedDates.map(date => ticketsByDate1[date]);
+    ticketTrendLabels = sortedDates;
+    ticketTrendData = sortedDates.map(date => ticketsByDate1[date]);
 
     // Consultar usuarios inhabilitados desde Firebase Auth
     const listAllUsers = async (nextPageToken) => {
@@ -271,12 +311,12 @@ exports.dataDashboard = async (req, res) => {
     } while (nextPageToken);
 
 
-    const totalDisabledUsers = usersAuth.filter(user => user.disabled).length;
+    totalDisabledUsers = usersAuth.filter(user => user.disabled).length;
     const disabledUsers = usersAuth.filter(user => user.disabled);
     disabledUsers.forEach(user => {
         userHArray.push({
             name: user.displayName,
-            email: user.email       
+            email: user.email
         });
 
     });
@@ -292,10 +332,12 @@ exports.dataDashboard = async (req, res) => {
         }, {});
     };
 
-    const filteredCategoryCount = filterData(categoryCount);
-    const filteredStateCount = filterData(stateCount);
-    const filteredCityCount = filterData(cityCount);
-    const filteredLocationCount = filterData(locationCount);
+    filteredCategoryCount = filterData(categoryCount);
+
+
+    filteredStateCount = filterData(stateCount);
+    filteredCityCount = filterData(cityCount);
+    filteredLocationCount = filterData(locationCount);
 
 
     const metrics = [
@@ -328,7 +370,7 @@ exports.dataDashboard = async (req, res) => {
     // Mostrar los datos en la consola
     //console.log("Datos de los usuarios:", userArray);
     /// console.log("Datos de los profesionales:", profArray);
-   // console.log("Datos de los tickets:", ticketArray);
+    // console.log("Datos de los tickets:", ticketArray);
     //console.log("Datos de los usuarios inhabilirado :", userHArray);
 
     const jsonify = (data) => JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
@@ -337,29 +379,38 @@ exports.dataDashboard = async (req, res) => {
         metrics,
         layout: 'main',
         showNavbar: true,
+
         startDate: startDate ? startDate.toISOString().split('T')[0] : null,
         endDate: endDate ? endDate.toISOString().split('T')[0] : null,
+
         barChartLabels: jsonify(Object.keys(filteredStateCount)),
         barChartData: jsonify(Object.values(filteredStateCount)),
+
         categoryChartLabels: jsonify(Object.keys(filteredCategoryCount)),
         categoryChartData: jsonify(Object.values(filteredCategoryCount)),
+
         cityChartLabels: jsonify(Object.keys(filteredCityCount)),
         cityChartData: jsonify(Object.values(filteredCityCount)),
+
         userTrendLabels: jsonify(userTrendLabels),
         userTrendData: jsonify(userTrendData),
+
         professionalTrendLabels: jsonify(professionalTrendLabels), // Convierte a JSON
         professionalTrendData: jsonify(professionalTrendData),   // Convierte a JSON
+
         ticketTrendLabels: jsonify(ticketTrendLabels),
         ticketTrendData: jsonify(ticketTrendData),
+
         locationChartLabels: jsonify(Object.keys(filteredLocationCount)),
         locationChartData: jsonify(Object.values(filteredLocationCount)),
+
         labelCategoryProf: jsonify(Object.keys(subcategoryCount)),
         valueProf: jsonify(Object.values(subcategoryCount)),
 
         dataUser: jsonify(userArray),
-        dataProf:jsonify( profArray),
+        dataProf: jsonify(profArray),
         userBloq: jsonify(userHArray),
-        dataticket:jsonify( ticketArray),
+        dataticket: jsonify(ticketArray),
 
 
         isDashboard: true,
@@ -370,21 +421,7 @@ exports.dataDashboard = async (req, res) => {
 
 
 
-
-
-
-exports.dataReports = async (req, res) => {
-    // Ajustar startDate y endDate a la zona horaria de Bogotá (UTC-5)
-    const startDate = req.query.startDate ? new Date(req.query.startDate + "T00:00:00Z") : null;
-    const endDate = req.query.endDate ? new Date(req.query.endDate + "T23:59:59Z") : null;
-
-    // Ajustar las fechas a la zona horaria de Bogotá (UTC-5)
-    if (startDate) {
-        startDate.setHours(startDate.getHours() - 5); // Ajustar la fecha de inicio
-    }
-    if (endDate) {
-        endDate.setHours(endDate.getHours() - 5); // Ajustar la fecha de fin
-    }
+exports.dataReports1 = async (req, res) => {
 
     // Obtener las categorías desde Firestore
     categoriesSnapshot = await db.collection('category').get(); // Obtener todas las categorías
@@ -401,8 +438,6 @@ exports.dataReports = async (req, res) => {
             subcategories: subcategoryTitles, // Array de títulos de subcategorías
         });
     }
-
-
     let usersQuery = db.collection('users');
     if (startDate && endDate) {
         usersQuery = usersQuery.where('createdAt', '>=', startDate).where('createdAt', '<=', endDate);
@@ -430,7 +465,7 @@ exports.dataReports = async (req, res) => {
         return { labels, data };
     };
 
-    const { labels: userTrendLabels, data: userTrendData } = getUsersByDateRange(usersData);
+    //    const { labels: userTrendLabels, data: userTrendData } = getUsersByDateRange(usersData);
 
     // Obtener profesionales en la nueva colección "professionals"
     const getProfessionalsByDateRange = async () => {
@@ -460,19 +495,37 @@ exports.dataReports = async (req, res) => {
 
         return { labels, data };
     };
-    const { labels: professionalTrendLabels, data: professionalTrendData } = await getProfessionalsByDateRange();
-    let totalUsers = usersData.length;
-    let totalProfessionals = 0;
+    //const { labels: professionalTrendLabels, data: professionalTrendData } = await getProfessionalsByDateRange();
+
+    //let totalUsers = usersData.length;
+    //let totalProfessionals = 0;
     let categoryCount = {};
     let stateCount = {};
     let cityCount = {};
-    let totalTickets = 0;
+    // let totalTickets = 0;
     // Contar profesionales
+    let query = db.collection('professionals');
 
-    const professionalsSnapshot = await db.collection('professionals')
+    // Filtro para excluir documentos donde createdAt sea null
+    query = query.where('createdAt', '!=', null);
+
+    // Añade filtros de fecha solo si startDate y endDate no son null
+    if (startDate !== null && startDate !== undefined) {
+        query = query.where('createdAt', '>=', startDate);
+    }
+
+    if (endDate !== null && endDate !== undefined) {
+        query = query.where('createdAt', '<=', endDate);
+    }
+
+    // Ejecuta la consulta
+    const professionalsSnapshot = await query.get();
+
+    /*const professionalsSnapshot = await db.collection('professionals')
         .where('createdAt', '>=', startDate)
         .where('createdAt', '<=', endDate)
-        .get();
+        .get();*/
+
     professionalsSnapshot.forEach(doc => {
         const professionalData = doc.data();
         const city = professionalData.city;
@@ -537,14 +590,14 @@ exports.dataReports = async (req, res) => {
 
     const data_etiquetas_ticket = filterData(categoryCount1)
 
-    const filteredStateCount = filterData(stateCount);
-    const filteredCityCountProfesional = filterData(cityCount);//ciudades de los tickets
-    const filteredLocationCountTicket = filterData(cityCount1);
+    //nst filteredCityCountProfesional = filterData(cityCount);//ciudades de los tickets
+    //  const filteredLocationCountTicket = filterData(cityCount1);
 
     const sortedDates = Object.keys(ticketsByDate1).sort();
-    const ticketTrendLabels = sortedDates;
-    const ticketTrendData = sortedDates.map(date => ticketsByDate1[date]);
+    // const ticketTrendLabels = sortedDates;
+    //const ticketTrendData = sortedDates.map(date => ticketsByDate1[date]);
     const data_ticket_city = filterData(filteredLocationCountTicket)
+
     const listAllUsers = async (nextPageToken) => {
         const result = await auth.listUsers(1000, nextPageToken);
         return result.users;
@@ -557,11 +610,11 @@ exports.dataReports = async (req, res) => {
         nextPageToken = users.pageToken;
     } while (nextPageToken);
 
-    const totalDisabledUsers = usersAuth.filter(user => user.disabled).length;
+    // const totalDisabledUsers = usersAuth.filter(user => user.disabled).length;
 
     // Pasar los datos a la vista de informes
-    const moment = require('moment-timezone');
-    const fechaActual = moment().tz('America/Bogota').format('YYYY-MM-DD HH:mm:ss');
+
+
 
     const jsonify = (data) => JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
     //uso de la ia metodo
@@ -623,24 +676,32 @@ exports.dataReports = async (req, res) => {
     //envio de datos a la vista
     res.render('inform', {
         fechaActual,
-        totalUsers,//total usuarios
+
+        totalUsers,//total usuarios/metrics de la otra
         totalProfessionals,// total profesionales
         totalTickets,//totatl de tickets
         totalDisabledUsers,// total de usuarios inhablitiados
+
         startDate: startDate ? startDate.toISOString().split('T')[0] : null,
         endDate: endDate ? endDate.toISOString().split('T')[0] : null,
+
         filteredStateCount,
         data_etiquetas_ticket,
         filteredLocationCountTicket,
         filteredCityCountProfesional,
+
         locationChartLabels: jsonify(Object.keys(filteredLocationCountTicket)),
         locationChartData: jsonify(Object.values(filteredLocationCountTicket)),
+
         userTrendLabels: jsonify(userTrendLabels),
         userTrendData: jsonify(userTrendData),
+
         professionalTrendLabels: jsonify(professionalTrendLabels),
         professionalTrendData: jsonify(professionalTrendData),
+
         ticketTrendLabels: jsonify(ticketTrendLabels),
         ticketTrendData: jsonify(ticketTrendData),
+
         formattedHallazgos,
         formattedRecomendaciones,
         formattedPerspectivasFuturas
@@ -652,6 +713,144 @@ exports.dataReports = async (req, res) => {
 
 
 
+
+
+exports.dataReports = async (req, res) => {
+    // Convertir startDate y endDate a objetos Date si son cadenas
+    // Convertir startDate y endDate a objetos Date si son cadenas
+    if (startDate && typeof startDate === 'string') {
+        startDate = new Date(startDate + "T00:00:00Z"); // Asegúrate de que sea UTC
+        if (isNaN(startDate.getTime())) { // Verifica si la fecha es válida
+            startDate = null; // Si no es válida, asigna null
+        }
+    }
+
+    if (endDate && typeof endDate === 'string') {
+        endDate = new Date(endDate + "T23:59:59Z"); // Asegúrate de que sea UTC
+        if (isNaN(endDate.getTime())) { // Verifica si la fecha es válida
+            endDate = null; // Si no es válida, asigna null
+        }
+    }
+
+    // Formatear las fechas solo si son válidas
+    const formattedStartDate = startDate instanceof Date && !isNaN(startDate.getTime())
+        ? startDate.toISOString().split('T')[0]
+        : null;
+
+    const formattedEndDate = endDate instanceof Date && !isNaN(endDate.getTime())
+        ? endDate.toISOString().split('T')[0]
+        : null;
+
+    //const data_etiquetas_ticket = filterData(categoryCount)
+    const jsonify = (data) => JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+    //uso de la ia metodo
+
+    const message = await getGreeting(
+        fechaActual,
+        totalUsers,
+        totalProfessionals,
+        totalTickets,
+        totalDisabledUsers,
+        formattedStartDate,
+        formattedEndDate,
+        filteredStateCount,
+        filteredCategoryCount,
+        filteredLocationCountTicket,
+        filteredCityCount,
+        filteredLocationCount,
+
+        jsonify(userTrendLabels),
+        jsonify(userTrendData),
+        jsonify(professionalTrendLabels),
+        jsonify(professionalTrendData),
+        jsonify(ticketTrendLabels),
+        jsonify(ticketTrendData)
+    );
+
+    const texto = String(message);
+    //console.log(texto)
+    // Expresiones regulares más flexibles
+
+    const hallazgosMatch = texto.match(/(?<=\*\*Hallazgos:\*\*\n)([\s\S]*?)(?=\n\*\*Recomendaciones:\*\*)/);
+    const recomendacionesMatch = texto.match(/(?<=\*\*Recomendaciones:\*\*\n)([\s\S]*?)(?=\n\*\*Perspectivas futuras:\*\*)/i);
+    const perspectivasFuturasMatch = texto.match(/(?<=\*\*Perspectivas futuras:\*\*\n)([\s\S]*)/i);
+
+    const hallazgos = hallazgosMatch ? hallazgosMatch[0].trim() : "No se encontraron hallazgos";
+    const recomendaciones = recomendacionesMatch ? recomendacionesMatch[0].trim() : "No se encontraron recomendaciones";
+    const perspectivasFuturas = perspectivasFuturasMatch ? perspectivasFuturasMatch[0].trim() : "No se encontraron perspectivas futuras";
+
+
+
+    const formattedHallazgos = hallazgos
+        .split(/\n\* /) // Dividir por el asterisco inicial de cada ítem de la lista
+        .filter(item => item.trim() !== '') // Eliminar elementos vacíos
+        .map(item => {
+            // Eliminar los asteriscos y limpiar saltos de línea
+            const cleanedItem = item.replace(/\*\*/g, '').replace(/\n+/g, ' ').trim();
+            return `<li>${cleanedItem}</li>`;
+        })
+        .join(''); // Unir todo como cadena
+
+
+    const formattedRecomendaciones = recomendaciones
+        .split(/\n\* /) // Dividir por el asterisco inicial de cada ítem de la lista
+        .filter(item => item.trim() !== '') // Eliminar elementos vacíos
+        .map(item => {
+            // Eliminar los asteriscos y limpiar saltos de línea
+            const cleanedItem = item.replace(/\*\*/g, '').replace(/\n+/g, ' ').trim();
+            return `<li>${cleanedItem}</li>`;
+        })
+        .join(''); // Unir todo como cadena
+
+    const formattedPerspectivasFuturas = perspectivasFuturas
+        .split(/\n\* /) // Dividir por el asterisco inicial de cada ítem de la lista
+        .filter(item => item.trim() !== '') // Eliminar elementos vacíos
+        .map(item => {
+            // Eliminar los asteriscos y limpiar saltos de línea
+            const cleanedItem = item.replace(/\*\*/g, '').replace(/\n+/g, ' ').trim();
+            return `<li>${cleanedItem}</li>`;
+        })
+        .join(''); // Unir todo como cadena
+
+
+    //envio de datos a la vista
+    res.render('inform', {
+        fechaActual,
+
+        totalUsers,//total usuarios/metrics de la otra
+        totalProfessionals,// total profesionales
+        totalTickets,//totatl de tickets
+        totalDisabledUsers,// total de usuarios inhablitiados
+
+        startDate: startDate ? startDate.toISOString().split('T')[0] : null,
+        endDate: endDate ? endDate.toISOString().split('T')[0] : null,
+
+        filteredStateCount,
+        //data_etiquetas_ticket,
+        filteredCategoryCount,
+        filteredLocationCountTicket,
+        //filteredCityCountProfesional,
+        filteredCityCount,
+
+        locationChartLabels: jsonify(Object.keys(filteredLocationCountTicket)),
+        locationChartData: jsonify(Object.values(filteredLocationCountTicket)),
+
+        userTrendLabels: jsonify(userTrendLabels),
+        userTrendData: jsonify(userTrendData),
+
+        professionalTrendLabels: jsonify(professionalTrendLabels),
+        professionalTrendData: jsonify(professionalTrendData),
+
+        ticketTrendLabels: jsonify(ticketTrendLabels),
+        ticketTrendData: jsonify(ticketTrendData),
+
+        formattedHallazgos,
+        formattedRecomendaciones,
+        formattedPerspectivasFuturas
+
+    });
+
+}
 
 
 
@@ -732,7 +931,8 @@ async function getGreeting(fechaActual, totalUsers, totalProfessionals, totalTic
    Proporciona hallazgos, recomendaciones y perspectivas futuras basadas en estos datos, y después de cada punto coloca "\n"
  `;
     // Llamada a la API para generar contenido
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.candidates[0]?.content.parts[0]?.text || "Sin etiqueta";
-    return (responseText);
+    console.log(prompt)
+    //const result = await model.generateContent(prompt);
+    //const responseText = result.response.candidates[0]?.content.parts[0]?.text || "Sin etiqueta";
+    return (prompt);
 }
