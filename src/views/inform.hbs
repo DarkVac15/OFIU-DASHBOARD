@@ -70,7 +70,7 @@
                             <div class="card-body text-center">
                                 <h5>Profesionales por ciudad</h5>
                                 <ul class="list-group">
-                                    {{#each filteredCityCountProfesional}}
+                                    {{#each filteredCityCount}}
                                     <li class="list-group-item">{{@key}}: {{this}} profesional</li>
                                     {{/each}}
                                 </ul>
@@ -88,7 +88,7 @@
             <div class="mb-4">
 
                 <h3>Estado de los tickets</h3>
-                <p>Gráfico de Barras mostrando el estado de los tickets</p>
+                <p>tablas mostrando el estado de los tickets</p>
                 <div id="ticket-status-chart"></div> <!-- Lugar para el gráfico de barras -->
                 <table class="table  table-bordered mt-3 ">
                     <thead>
@@ -124,7 +124,7 @@
 
             <div class="mb-4">
                 <h4>Tickets por etiquetas</h4>
-                <p>Gráfico de Barras con las etiquetas más frecuentes en tickets</p>
+                <p>Tabla con las etiquetas más frecuentes en tickets</p>
                 <div id="ticket-tags-chart"></div> <!-- Lugar para el gráfico de etiquetas -->
                 <table class="table table-bordered mt-3">
                     <thead>
@@ -134,7 +134,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{#each data_etiquetas_ticket}}
+                        {{#each filteredCategoryCount}}
                         <tr>
                             <td>{{@key}}</td>
                             <td>{{this}}</td>
@@ -160,7 +160,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{#each filteredLocationCountTicket}}
+                        {{#each filteredLocationCount}}
                         <tr>
                             <td>{{@key}}</td>
                             <td>{{this}}</td>
@@ -325,6 +325,7 @@
                 }]
             },
             options: {
+                  animation: false, // Desactiva las animaciones
                 responsive: true,  // Ajuste responsivo
                 scales: {
                     x: {
@@ -360,6 +361,7 @@
                 }]
             },
             options: {
+                  animation: false, // Desactiva las animaciones
                 responsive: true,
                 scales: {
                     x: {
@@ -394,6 +396,7 @@
             }]
         },
         options: {
+              animation: false, // Desactiva las animaciones
             responsive: true,
                 scales: {
                 x: {

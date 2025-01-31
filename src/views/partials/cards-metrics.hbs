@@ -1,13 +1,17 @@
 <!-- Modal -->
 <div class="modal fade" id="generalModal" tabindex="-1" aria-labelledby="generalModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl"> <!-- Usar modal-xl para un modal extra grande -->
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="generalModalLabel">Detalles</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="modalBodyContent">
-                <!-- Aquí se cargará la tabla dinámicamente -->
+                <div class="table-responsive"> <!-- Hacer la tabla desplazable -->
+                    <table class="table">
+                        <!-- Contenido de la tabla -->
+                    </table>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
@@ -15,7 +19,6 @@
         </div>
     </div>
 </div>
-
 
 
 <div class="row">
@@ -120,68 +123,63 @@
         });
     });
 
+function showData(type) {
+    let data = [];
+    let tableHeaders = "";
 
-    function showData(type) {
-        let data = [];
-        let tableHeaders = "";
-
-        // Seleccionamos el array de datos correspondiente
-        switch (type) {
-            case "users":
-                data = dataUser;
-                tableHeaders = "<th>Nombre</th><th>Email</th><th>Fecha de registro</th>";
-                break;
-            case "professionals":
-                data = dataProf;
-                tableHeaders = "<th>Nombre</th><th>Email</th><th>Ciudad</th><th>Celular</th><th>Habilidades</th><th>Fecha de registro</th>";
-                break;
-            case "disabled-users":
-                data = userBloq;
-                tableHeaders = "<th>Nombre</th><th>Email</th>";
-                break;
-            case "tickets":
-                data = dataticket;
-                tableHeaders = "<th>Título</th><th>Fecha de creacion</th><th>Estado</th><th>Ciudad de trabajo</th><th>Etiquetas</th>";
-                break;
-            default:
-                data = [];
-        }
-
-        let tableContent = `
-            <table class="table table-striped">
-                <thead>
-                    <tr>${tableHeaders}</tr>
-                </thead>
-                <tbody>
-        `;
-
-        data.forEach(item => {
-            tableContent += "<tr>";
-            if (type === "users") {
-                tableContent += `<td>${item.name}</td><td>${item.email}</td><td>${item.createdAt}</td>`;
-
-            } else if (type === "professionals") {
-                tableContent += `<td>${item.name}</td><td>${item.email}</td><td>${item.city || 'N/A'}</td><td>${item.phone}</td><th>${item.skills}</th><th>${item.createdAt}</th>`;
-
-            } else if (type === "blockedUsers") {
-                tableContent += `<td>${item.name}</td><td>${item.email}</td>`;
-
-            } else if (type === "tickets") {
-                tableContent += `<td>${item.title}</td><td>${item.createdAt}</td><td>${item.state}</td><td>${item.cityTicket}</td><th>${item.tags}</th>`;
-            }
-            tableContent += "</tr>";
-        });
-
-        tableContent += "</tbody></table>";
-
-        // Insertamos la tabla en el modal
-        document.getElementById("modalBodyContent").innerHTML = tableContent;
-
-        // Mostramos el modal
-        let modal = new bootstrap.Modal(document.getElementById("generalModal"));
-        modal.show();
+    // Seleccionamos el array de datos correspondiente
+    switch (type) {
+        case "users":
+            data = dataUser;
+            tableHeaders = "<th>Nombre</th><th>Email</th><th>Fecha de registro</th>";
+            break;
+        case "professionals":
+            data = dataProf;
+            tableHeaders = "<th>Nombre</th><th>Email</th><th>Ciudad</th><th>Celular</th><th>Habilidades</th><th>Fecha de registro</th>";
+            break;
+        case "disabled-users":
+            data = userBloq;
+            tableHeaders = "<th>Nombre</th><th>Email</th>";
+            break;
+        case "tickets":
+            data = dataticket;
+            tableHeaders = "<th>Título</th><th>Fecha de creación</th><th>Estado</th><th>Ciudad de trabajo</th><th>Etiquetas</th>";
+            break;
+        default:
+            data = [];
     }
 
+    let tableContent = `
+        <table class="table table-striped">
+            <thead>
+                <tr>${tableHeaders}</tr>
+            </thead>
+            <tbody>
+    `;
+
+    data.forEach(item => {
+        tableContent += "<tr>";
+        if (type === "users") {
+            tableContent += `<td>${item.name}</td><td>${item.email}</td><td>${item.createdAt}</td>`;
+        } else if (type === "professionals") {
+            tableContent += `<td>${item.name}</td><td>${item.email}</td><td>${item.city || 'N/A'}</td><td>${item.phone}</td><td>${item.skills}</td><td>${item.createdAt}</td>`;
+        } else if (type === "disabled-users") {
+            tableContent += `<td>${item.name}</td><td>${item.email}</td>`;
+        } else if (type === "tickets") {
+            tableContent += `<td>${item.title}</td><td>${item.createdAt}</td><td>${item.state}</td><td>${item.cityTicket}</td><td>${item.tags}</td>`;
+        }
+        tableContent += "</tr>";
+    });
+
+    tableContent += "</tbody></table>";
+
+    // Insertamos la tabla en el modal
+    document.getElementById("modalBodyContent").innerHTML = tableContent;
+
+    // Mostramos el modal
+    let modal = new bootstrap.Modal(document.getElementById("generalModal"));
+    modal.show();
+}
 
 
 
