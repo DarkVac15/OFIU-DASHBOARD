@@ -21,7 +21,7 @@
 </div>
 
 
-<div class="row">
+<div class="row justify-content-center">
     {{#each metrics}}
     <div class="col-md-4 mb-4">
         <div class="card text-white bg-dark" data-type="{{this.type}}" id="card-{{this.type}}">
@@ -43,24 +43,24 @@
     {{/each}}
 </div>
 
-<div class="row">
-    <div class="col-md-4 text-white bg-dark">
-        <h2> Estado de los tickets </h2>
+<div class="row justify-content-center"> <!-- Centrar la fila -->
+    <div class="col-md-4 text-white bg-dark p-3 text-center"> <!-- Añadir padding y centrar texto -->
+        <h2>Estado de los tickets</h2>
         <canvas id="barChart" width="400" height="200"></canvas>
     </div>
-
-    <div class="col-md-4 text-white bg-dark">
-        <h2> Tickets por etiquetas</h2>
-        <canvas id="categoryChart" width="400" height="200"></canvas>
-    </div>
-    <div class="col-md-4 text-white bg-dark">
-        <h2> Profesionales por Ciudad</h2>
+    <div class="col-md-4 text-white bg-dark p-3 text-center"> <!-- Añadir padding y centrar texto -->
+        <h2>Profesionales por Ciudad</h2>
         <canvas id="cityChart" width="400" height="200"></canvas>
     </div>
-    <!-- Agrega un lienzo para el gráfico -->
-    <div class="col-md-4 text-white bg-dark">
-        <h2> Distribución de Profesionales por etiquetas </h2>
-        <canvas id="professionalsPieChart"></canvas>
+</div>
+<div class="row justify-content-center mt-4"> <!-- Centrar la fila y añadir margen superior -->
+    <div class="col-md-4 text-white bg-dark p-3 text-center"> <!-- Añadir padding y centrar texto -->
+        <h2>Distribución de Tickets por etiquetas</h2>
+        <canvas id="categoryChart" width="400" height="200"></canvas>
+    </div>
+    <div class="col-md-4 text-white bg-dark p-3 text-center"> <!-- Añadir padding y centrar texto -->
+        <h2>Distribución de Profesionales por etiquetas</h2>
+        <canvas id="professionalsPieChart" width="400" height="200"></canvas>
     </div>
 </div>
 
@@ -116,40 +116,40 @@
             card.addEventListener("click", function () {
                 const type = this.getAttribute("data-type"); // Obtiene el tipo de tarjeta
                 if (type) {
-                
+
                     showData(type); // Llama a la función para mostrar los datos
                 }
             });
         });
     });
 
-function showData(type) {
-    let data = [];
-    let tableHeaders = "";
+    function showData(type) {
+        let data = [];
+        let tableHeaders = "";
 
-    // Seleccionamos el array de datos correspondiente
-    switch (type) {
-        case "users":
-            data = dataUser;
-            tableHeaders = "<th>Nombre</th><th>Email</th><th>Fecha de registro</th>";
-            break;
-        case "professionals":
-            data = dataProf;
-            tableHeaders = "<th>Nombre</th><th>Email</th><th>Ciudad</th><th>Celular</th><th>Habilidades</th><th>Fecha de registro</th>";
-            break;
-        case "disabled-users":
-            data = userBloq;
-            tableHeaders = "<th>Nombre</th><th>Email</th>";
-            break;
-        case "tickets":
-            data = dataticket;
-            tableHeaders = "<th>Título</th><th>Fecha de creación</th><th>Estado</th><th>Ciudad de trabajo</th><th>Etiquetas</th>";
-            break;
-        default:
-            data = [];
-    }
+        // Seleccionamos el array de datos correspondiente
+        switch (type) {
+            case "users":
+                data = dataUser;
+                tableHeaders = "<th>Nombre</th><th>Email</th><th>Fecha de registro</th>";
+                break;
+            case "professionals":
+                data = dataProf;
+                tableHeaders = "<th>Nombre</th><th>Email</th><th>Ciudad</th><th>Celular</th><th>Habilidades</th><th>Fecha de registro</th>";
+                break;
+            case "disabled-users":
+                data = userBloq;
+                tableHeaders = "<th>Nombre</th><th>Email</th>";
+                break;
+            case "tickets":
+                data = dataticket;
+                tableHeaders = "<th>Título</th><th>Fecha de creación</th><th>Estado</th><th>Ciudad de trabajo</th><th>Etiquetas</th>";
+                break;
+            default:
+                data = [];
+        }
 
-    let tableContent = `
+        let tableContent = `
         <table class="table table-striped">
             <thead>
                 <tr>${tableHeaders}</tr>
@@ -157,29 +157,29 @@ function showData(type) {
             <tbody>
     `;
 
-    data.forEach(item => {
-        tableContent += "<tr>";
-        if (type === "users") {
-            tableContent += `<td>${item.name}</td><td>${item.email}</td><td>${item.createdAt}</td>`;
-        } else if (type === "professionals") {
-            tableContent += `<td>${item.name}</td><td>${item.email}</td><td>${item.city || 'N/A'}</td><td>${item.phone}</td><td>${item.skills}</td><td>${item.createdAt}</td>`;
-        } else if (type === "disabled-users") {
-            tableContent += `<td>${item.name}</td><td>${item.email}</td>`;
-        } else if (type === "tickets") {
-            tableContent += `<td>${item.title}</td><td>${item.createdAt}</td><td>${item.state}</td><td>${item.cityTicket}</td><td>${item.tags}</td>`;
-        }
-        tableContent += "</tr>";
-    });
+        data.forEach(item => {
+            tableContent += "<tr>";
+            if (type === "users") {
+                tableContent += `<td>${item.name}</td><td>${item.email}</td><td>${item.createdAt}</td>`;
+            } else if (type === "professionals") {
+                tableContent += `<td>${item.name}</td><td>${item.email}</td><td>${item.city || 'N/A'}</td><td>${item.phone}</td><td>${item.skills}</td><td>${item.createdAt}</td>`;
+            } else if (type === "disabled-users") {
+                tableContent += `<td>${item.name}</td><td>${item.email}</td>`;
+            } else if (type === "tickets") {
+                tableContent += `<td>${item.title}</td><td>${item.createdAt}</td><td>${item.state}</td><td>${item.cityTicket}</td><td>${item.tags}</td>`;
+            }
+            tableContent += "</tr>";
+        });
 
-    tableContent += "</tbody></table>";
+        tableContent += "</tbody></table>";
 
-    // Insertamos la tabla en el modal
-    document.getElementById("modalBodyContent").innerHTML = tableContent;
+        // Insertamos la tabla en el modal
+        document.getElementById("modalBodyContent").innerHTML = tableContent;
 
-    // Mostramos el modal
-    let modal = new bootstrap.Modal(document.getElementById("generalModal"));
-    modal.show();
-}
+        // Mostramos el modal
+        let modal = new bootstrap.Modal(document.getElementById("generalModal"));
+        modal.show();
+    }
 
 
 
@@ -431,23 +431,44 @@ function showData(type) {
     const categoryLabels = JSON.parse('{{{ categoryChartLabels }}}');
     const categoryData = JSON.parse('{{{ categoryChartData }}}');
     // Configurar el gráfico de barras de categorías
+
     const ctxCategory = document.getElementById('categoryChart').getContext('2d');
     const categoryChart = new Chart(ctxCategory, {
-        type: 'bar', // Tipo de gráfico de barras
+        type: 'pie', // Tipo de gráfico de pastel
         data: {
             labels: categoryLabels, // Nombres de las categorías
             datasets: [{
                 label: 'Categorías más solicitadas',
                 data: categoryData, // Conteo de cada categoría
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)', // Rojo
+                    'rgba(54, 162, 235, 0.6)', // Azul
+                    'rgba(255, 206, 86, 0.6)', // Amarillo
+                    'rgba(75, 192, 192, 0.6)', // Verde
+                    'rgba(153, 102, 255, 0.6)', // Morado
+                    'rgba(255, 159, 64, 0.6)', // Naranja
+                    'rgba(199, 199, 199, 0.6)'  // Gris
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(199, 199, 199, 1)'
+                ],
                 borderWidth: 1
             }]
         },
         options: {
-            scales: {
-                y: {
-                    beginAtZero: true // El eje Y comienza desde 0
+            responsive: true, // Hace que el gráfico sea responsive
+            plugins: {
+                legend: {
+                    position: 'right', // Posición de la leyenda
+                },
+                tooltip: {
+                    enabled: true, // Habilita los tooltips
                 }
             }
         }

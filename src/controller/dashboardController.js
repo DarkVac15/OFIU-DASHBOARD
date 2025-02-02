@@ -2,18 +2,13 @@ const { db, auth } = require("../config/firebase");
 const puppeteer = require('puppeteer');
 const moment = require('moment-timezone');
 
-
 let userArray = [];
 let profArray = [];
 let userHArray = [];
 let ticketArray = [];
-
-
-
 let startDate = moment().tz('America/Bogota').format('YYYY-MM-DD HH:mm:ss');
 let endDate = moment().tz('America/Bogota').format('YYYY-MM-DD HH:mm:ss');;  // Hasta el final del día
 const fechaActual = moment().tz('America/Bogota').format('YYYY-MM-DD HH:mm:ss');
-
 let filteredStateCount = null;
 let filteredCityCount = null;
 let userTrendLabels, userTrendData = null;
@@ -21,14 +16,9 @@ let professionalTrendLabels, professionalTrendData = null;
 let ticketTrendLabels = null;
 let ticketTrendData = null;
 let filteredLocationCount = {};
-
 let subcategoryCount = {};
-
-//let filteredLocationCountTicket = null;
 let categoryCount = {};
-//totales
 let totalUsers, totalProfessionals, totalTickets, totalDisabledUsers;
-
 let filteredCategoryCount = null;
 
 exports.dataDashboard = async (req, res) => {
@@ -210,7 +200,7 @@ exports.dataDashboard = async (req, res) => {
 
 
     totalUsers = usersData.length;
-
+    subcategoryCount = {};
     // Objeto para contar la cantidad de profesionales por subcategoría
 
 
@@ -241,7 +231,7 @@ exports.dataDashboard = async (req, res) => {
 
     // Ahora tienes los conteos de subcategorías en el objeto subcategoryCount
     //console.log(subcategoryCount); // Imprime el resultado o lo puedes devolver com
-
+    categoryCount = {};
     const ticketsSnapshot = await db.collection('tickets').get();
 
     const ticketsByDate1 = {};
@@ -251,6 +241,7 @@ exports.dataDashboard = async (req, res) => {
         const ticketCreatedAt = ticketData.createdAt.toDate();
         const formattedDate = ticketCreatedAt.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' }); // 'YYYY-MM-DD'
 
+        // Verificar si el ticket está dentro del rango de fechas
         if ((!startDate && !endDate) || (ticketCreatedAt >= startDate && ticketCreatedAt <= endDate)) {
             if (!ticketsByDate1[formattedDate]) {
                 ticketsByDate1[formattedDate] = 1;
@@ -263,35 +254,31 @@ exports.dataDashboard = async (req, res) => {
             if (state) {
                 stateCount[state] = (stateCount[state] || 0) + 1;
             }
+
             const location = ticketData.cityTicket;
             if (state === "Abierto" && location) {
                 locationCount[location] = (locationCount[location] || 0) + 1;
             }
 
-            // Contar las categorías (subcategorías) dentro de 'tags'
+            // Contar las categorías (subcategorías) dentro de 'tags' solo si el ticket está dentro del rango de fechas
             const tags = ticketData.tags;
             if (tags && Array.isArray(tags)) {
                 tags.forEach(tag => {
                     categoryCount[tag] = (categoryCount[tag] || 0) + 1;
                 });
-
             }
 
-
-            //guardar en el array los datos ;v
+            // Guardar en el array los datos
             ticketArray.push({
                 title: ticketData.title,
                 createdAt: formattedDate,
                 cityTicket: ticketData.cityTicket,
                 state: ticketData.state,
                 tags: ticketData.tags
-            })
-
+            });
         }
-
-
-
     });
+
     const sortedDates = Object.keys(ticketsByDate1).sort();
     ticketTrendLabels = sortedDates;
     ticketTrendData = sortedDates.map(date => ticketsByDate1[date]);
@@ -334,7 +321,7 @@ exports.dataDashboard = async (req, res) => {
 
     filteredCategoryCount = filterData(categoryCount);
 
-    console.log(" filteredCategoryCount =", filteredCategoryCount)
+    //console.log(" filteredCategoryCount =", filteredCategoryCount)
     filteredStateCount = filterData(stateCount);
     filteredCityCount = filterData(cityCount);
     filteredLocationCount = filterData(locationCount);
@@ -419,9 +406,6 @@ exports.dataDashboard = async (req, res) => {
         isTags: false
     });
 };
-
-
-
 
 
 
@@ -566,24 +550,26 @@ exports.generatePDF = async (req, res) => {
             : `http://localhost:3000/dashboard/export-pdf`;
 
         const browser = await puppeteer.launch({
-            // Configuración para producción (opcional)
             executablePath: '/usr/bin/chromium-browser',
             headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage', // Evita problemas de memoria en entornos limitados
+                '--disable-accelerated-2d-canvas',
+                '--disable-gpu', // Desactiva la GPU si no es necesaria
+                '--remote-debugging-port=9222', // Opcional: habilita el debugging remoto
+                '--single-process', // Útil para entornos con recursos limitados
+            ],
         });
-
+        
         const page = await browser.newPage();
-
         // Navegar a la URL y esperar a que la red esté inactiva
         await page.goto(url, {
             waitUntil: 'networkidle0',
             timeout: 120000
         });
-
         // Esperar a que las gráficas se rendericen
-        //  await page.waitForSelector('#userTrendChart', { visible: true });
-        // Esperar un tiempo adicional para asegurar que las gráficas estén listas
-        //        await page.waitFor(1000); // Espera 1 segundo
         // Generar el PDF
         const pdfBuffer = await page.pdf({
             format: 'A4',
@@ -604,9 +590,6 @@ exports.generatePDF = async (req, res) => {
         res.status(500).send("Hubo un error al generar el PDF.");
     }
 };
-
-
-
 
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
