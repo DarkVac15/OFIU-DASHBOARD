@@ -24,14 +24,19 @@
 </head>
 
 <body class="index-pages">
- {{#if errorMessage}}
-  <div class="alert-container">
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+  
+{{#if errorMessage}}
+  <div class="d-flex justify-content-center mt-3">
+    <div class="alert alert-danger alert-dismissible fade show text-center" 
+         role="alert" 
+         style="max-width: 280px; width: 100%;">
+      
       {{errorMessage}}
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
   </div>
-  {{/if}}
+{{/if}}
+
   
   <header id="header" class="header d-flex align-items-center fixed-top  ">
     {{> navbar_page}}

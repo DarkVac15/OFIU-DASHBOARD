@@ -10,19 +10,79 @@
 
             <!-- Botón para exportar el dashboard a PDF -->
             <div class="text-end mt-4">
-                <a href="/dashboard/generate-pdf{{#if startDate}}?startDate={{startDate}}&endDate={{endDate}}{{/if}}"
-                    class="btn btn-primary">
+                <button id="generatePDF" class="btn btn-primary"
+                    data-url="/dashboard/generate-pdf{{#if startDate}}?startDate={{startDate}}&endDate={{endDate}}{{/if}}">
                     Exportar a PDF
-                </a>
+                </button>
+
+                <!-- Spinner oculto -->
+                <div id="loading" class="mt-3 d-none text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Generando PDF...</span>
+                    </div>
+                    <p class="mt-2">Generando informe, por favor espere...</p>
+                </div>
             </div>
         </div>
+        <!-- Mensaje de error oculto -->
+        <div class="d-flex justify-content-center">
+            <div id="pdfError" class="alert alert-danger d-none mt-3 w-25 show " role="alert">
+                Error al generar el PDF. Inténtelo de nuevo.
+               
+            </div>
+            
+        </div>
+
     </main>
+
 
     <footer>
 
         {{> footer}}
     </footer>
 
+
+    <script>
+        document.getElementById("generatePDF").addEventListener("click", async function () {
+            const button = this;
+            const loading = document.getElementById("loading");
+            const pdfUrl = button.getAttribute("data-url");
+            const errorAlert = document.getElementById("pdfError");
+
+            // Deshabilita el botón y muestra el spinner
+            button.classList.add("disabled");
+            loading.classList.remove("d-none");
+
+            try {
+                // Hace la petición al servidor
+                const response = await fetch(pdfUrl);
+
+                if (!response.ok) {
+                    throw new Error("Error al generar el PDF");
+                }
+
+                // Convierte la respuesta en un Blob (archivo PDF)
+                const blob = await response.blob();
+                const pdfURL = window.URL.createObjectURL(blob);
+
+                // Crea un enlace para descargar el PDF
+                const a = document.createElement("a");
+                a.href = pdfURL;
+                a.download = "informe.pdf";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
+            } catch (error) {
+                errorAlert.classList.remove("d-none");
+                console.error(error);
+            } finally {
+                // Habilita el botón y oculta el spinner
+                button.classList.remove("disabled");
+                loading.classList.add("d-none");
+            }
+        });
+    </script>
 
 
 

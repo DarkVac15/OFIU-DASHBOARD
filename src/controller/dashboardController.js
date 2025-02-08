@@ -1,5 +1,5 @@
 const { db, auth } = require("../config/firebase");
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');//revisar en locl
 const moment = require('moment-timezone');
 
 let userArray = [];
@@ -544,10 +544,14 @@ exports.dataReports = async (req, res) => {
 
 exports.generatePDF = async (req, res) => {
     try {
-        const { startDate, endDate } = req.query;
-        const url = startDate && endDate
+      
+    
+      const { startDate, endDate } = req.query;
+
+       const url = startDate && endDate
             ? `http://localhost:3000/dashboard/export-pdf?startDate=${startDate}&endDate=${endDate}`
             : `http://localhost:3000/dashboard/export-pdf`;
+
 
         const browser = await puppeteer.launch({
             executablePath: '/usr/bin/chromium-browser',
@@ -585,9 +589,12 @@ exports.generatePDF = async (req, res) => {
         res.setHeader('Content-Disposition', 'attachment; filename="informe.pdf"');
         res.setHeader('Content-Length', pdfBuffer.length);
         res.end(pdfBuffer);
+       
     } catch (error) {
-        console.error("Error generando el PDF:", error);
-        res.status(500).send("Hubo un error al generar el PDF.");
+        console.error("Error al generar el PDF:", error);
+        
+        res.status(500).json({ error: "Hubo un error al generar el PDF" });
+
     }
 };
 
