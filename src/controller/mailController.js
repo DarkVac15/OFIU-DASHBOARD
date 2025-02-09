@@ -700,7 +700,8 @@ Descripción: ${reportDescription}`,
 // Función para enviar el reporte
 exports.sendSupport = async (req, res) => {
    const { supportEmail, supportUser, supportDescription } = req.body;
-   if(validarcorreo(reporterEmail)){
+
+   if(validarcorreo(supportEmail)){
       const errorMessage = "Correo no valido";
       return res.redirect(`/reports/?message=${encodeURIComponent(errorMessage)}`);
    }
@@ -733,7 +734,8 @@ Descripción: ${supportDescription}`,
 // Función para enviar el reporte
 exports.sendUnsubscribe = async (req, res) => {
    const { unsubscribeName, unsubscribeEmail, unsubscribeDescription } = req.body;
-   if(validarcorreo(reporterEmail)){
+
+   if(validarcorreo(unsubscribeEmail)){
       const errorMessage = "Correo no valido";
       return res.redirect(`/reports/?message=${encodeURIComponent(errorMessage)}`);
    }
