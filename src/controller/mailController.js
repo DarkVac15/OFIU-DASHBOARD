@@ -321,6 +321,8 @@ exports.notificarTicket= async(req,res, data)=>{
 
 }
 
+
+
 // Controlador para enviar correo de habilitar/inhabilitar usuarios
 exports.toggleUserStatus = async (req, res) => {
 
@@ -331,6 +333,7 @@ exports.toggleUserStatus = async (req, res) => {
       return res.status(400).json({ error: 'No se ha definido un destinatario para el correo.' });
    }
 
+   
    try {
 
       // Habilitar o inhabilitar el usuario según la acción
@@ -641,9 +644,32 @@ exports.toggleUserStatus = async (req, res) => {
 };
 
 
+async function validarcorreo(correo){
+   try {
+      // Realiza una consulta en la colección "users" donde el campo "email" sea igual al correo proporcionado
+      const usersRef = db.collection('users');
+      const snapshot = await usersRef.where('email', '==', correo).get();
+
+      // Si hay al menos un documento, el correo existe
+      if (!snapshot.empty) {
+          return true; // El correo existe
+      } else {
+          return false; // El correo no existe
+      }
+  } catch (error) {
+      console.error("Error al validar el correo:", error);
+      throw error; // Lanza el error para manejarlo en una capa superior
+  }
+}
 // Función para enviar el reporte
 exports.sendReport = async (req, res) => {
    const { reporterEmail, reportedUser, reportDescription } = req.body;
+   
+   if(validarcorreo(reporterEmail)){
+      const errorMessage = "Correo no valido";
+      return res.redirect(`/reports/?message=${encodeURIComponent(errorMessage)}`);
+   }
+
    // Configura el contenido del correo
    let mailOptions = {
       from: "oficialofiu@gmail.com",
@@ -674,6 +700,10 @@ Descripción: ${reportDescription}`,
 // Función para enviar el reporte
 exports.sendSupport = async (req, res) => {
    const { supportEmail, supportUser, supportDescription } = req.body;
+   if(validarcorreo(reporterEmail)){
+      const errorMessage = "Correo no valido";
+      return res.redirect(`/reports/?message=${encodeURIComponent(errorMessage)}`);
+   }
    // Configura el contenido del correo
    let mailOptions = {
       from: "oficialofiu@gmail.com",
@@ -700,12 +730,13 @@ Descripción: ${supportDescription}`,
 };
 
 
-
-
-
 // Función para enviar el reporte
 exports.sendUnsubscribe = async (req, res) => {
    const { unsubscribeName, unsubscribeEmail, unsubscribeDescription } = req.body;
+   if(validarcorreo(reporterEmail)){
+      const errorMessage = "Correo no valido";
+      return res.redirect(`/reports/?message=${encodeURIComponent(errorMessage)}`);
+   }
    // Configura el contenido del correo
    let mailOptions = {
       from: "oficialofiu@gmail.com",
