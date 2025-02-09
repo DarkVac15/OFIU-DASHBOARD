@@ -44,27 +44,9 @@ router.get('/', async (req, res) => {
 });
 
 // Ruta para habilitar usuario
-// Ejemplo de controlador
+
 router.post('/toggle-user-status', userController.toggleUserStatus);
 
-router.post('/toggle-user-status1', userController.toggleUserStatus, async (req, res) => {
-    const { uid, action } = req.body;
-
-    try {
-        // Habilitar o inhabilitar el usuario según la acción
-        if (action === 'enable') {
-            await auth.updateUser(uid, { disabled: false });
-            // Envía correo aquí
-        } else {
-            await auth.updateUser(uid, { disabled: true });
-            // Envía correo aquí
-        }
-        res.status(200).send({ message: 'Usuario actualizado correctamente.' });
-    } catch (error) {
-        console.error('Error al actualizar el usuario:', error);
-        res.status(500).send({ error: 'Error al actualizar el usuario.' });
-    }
-});
 
 
 

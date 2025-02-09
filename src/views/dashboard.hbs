@@ -30,31 +30,17 @@
                 Error al generar el PDF. Inténtelo de nuevo.
 
             </div>
-
         </div>
-
     </main>
-
-
     <footer>
 
         {{> footer}}
     </footer>
-
-
     <script>
         document.getElementById("generatePDF").addEventListener("click", async function () {
-
-            document.getElementById("loading-spinner").classList.remove("d-none");
-
-            const button = this;
+            dofcument.getElementById("loading-spinner").classList.remove("d-none");
             const pdfUrl = button.getAttribute("data-url");
             const errorAlert = document.getElementById("pdfError");
-
-            // Deshabilita el botón y muestra el spinner
-            button.classList.add("disabled");
-
-
             try {
                 // Hace la petición al servidor
                 const response = await fetch(pdfUrl);
@@ -62,11 +48,9 @@
                 if (!response.ok) {
                     throw new Error("Error al generar el PDF");
                 }
-
                 // Convierte la respuesta en un Blob (archivo PDF)
                 const blob = await response.blob();
                 const pdfURL = window.URL.createObjectURL(blob);
-
                 // Crea un enlace para descargar el PDF
                 const a = document.createElement("a");
                 a.href = pdfURL;
@@ -79,8 +63,6 @@
                 errorAlert.classList.remove("d-none");
                 console.error(error);
             } finally {
-                // Habilita el botón y oculta el spinner
-                button.classList.remove("disabled");
                 document.getElementById("loading-spinner").classList.add("d-none")
             }
         });

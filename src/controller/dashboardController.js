@@ -51,6 +51,7 @@ exports.dataDashboard = async (req, res) => {
     if (endDate) {
         endDate.setHours(endDate.getHours() - 5); // Ajustar la fecha de fin
     }
+    
     const categoriesSnapshot = await db.collection('category').get(); // Obtener todas las categorías
     const categoriasConSubcategorias = []; // Array para almacenar las categorías con sus subcategorías
     for (const categoryDoc of categoriesSnapshot.docs) {
@@ -230,7 +231,7 @@ exports.dataDashboard = async (req, res) => {
 
 
     // Ahora tienes los conteos de subcategorías en el objeto subcategoryCount
-    //console.log(subcategoryCount); // Imprime el resultado o lo puedes devolver com
+    //console.log(subcategoryCount); // 
     categoryCount = {};
     const ticketsSnapshot = await db.collection('tickets').get();
 
