@@ -9,7 +9,9 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 router.post('/tags_jobs', async (req, res) => {
     const docId = req.body.id;
-    // console.log(docId);
+    
+    const docIdCliente = req.body.idClient;
+
 
     if (!docId) {
         return res.status(400).json({ error: 'ID del documento no proporcionado' });
@@ -20,7 +22,7 @@ router.post('/tags_jobs', async (req, res) => {
         const subcategorias = []; // Array para almacenar las categorías con sus subcategorías
         for (const categoryDoc of categoriesSnapshot.docs) {
             const categoryId = categoryDoc.id; // ID de la categoría
-            //const categoryData = categoryDoc.data(); // Datos de la categoría
+            
             // Obtener las subcategorías de la categoría actual
             const subcategoriesSnapshot = await db.collection(`category/${categoryId}/subcategories`).get();
 
@@ -45,7 +47,7 @@ router.post('/tags_jobs', async (req, res) => {
         // Definir el prompt para la IA
         const prompt = `Dada la descripción: "${descripcion}", y la lista de etiquetas: [${subcategorias.join(', ')}], selecciona solo las etiquetas que tengan una relación lógica y directa con la descripción proporcionada. 
 
-Si la descripción contiene referencias a trabajos NSFW, brujería, sicariato, o cualquier tema ilegal o inapropiado, responde únicamente con "Contenido prohibido". 
+Si la descripción contiene referencias a trabajos NSFW, brujería, sicariato, o cualquier tema ilegal o inapropiado, responde únicamente con "Contenido inadecuado". 
 
 Si ninguna etiqueta es relevante, responde con "Sin etiqueta".`;
 
@@ -63,16 +65,17 @@ Si ninguna etiqueta es relevante, responde con "Sin etiqueta".`;
             .map(etiqueta => etiqueta.trim());
         // Actualizar el documento en Firestore con las etiquetas sugeridas
 
-        if (etiquetasSugeridas == "Contenido prohibido") {
+        if (etiquetasSugeridas == "Contenido inadecuado") {
+
             await db.collection('tickets').doc(docId).update({
-                state: etiquetasSugeridas
+                state: "Finalizado",
+                tags: etiquetasSugeridas
             });
-
-            const docIdCliente = req.body.idClient;
-
             const doc = await db.collection('users').doc(docIdCliente).get();
-            const name = doc.name;
-            const email= doc.email;
+         
+            const name = doc.data().name;
+            const email= doc.data().email;
+
             await mailController.notificarTicket(req, res,{name,email});
 
 

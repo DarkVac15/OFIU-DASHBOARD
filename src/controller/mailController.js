@@ -11,6 +11,7 @@ const transporter = nodemailer.createTransport({
 });
 exports.notificarTicket= async(req,res, data)=>{
    const {  email,  name } = data;
+
    if (!email) {
       
       return res.status(400).json({ error: 'No se ha definido un destinatario para el correo.' });
@@ -166,8 +167,8 @@ exports.notificarTicket= async(req,res, data)=>{
                                  style="font-size: 24px; line-height: 32px;">
                                  <span
                                     style="font-family: 'Source Sans Pro', Arial, Tahoma, Geneva, sans-serif; color: #585858; font-size: 24px; line-height: 32px;"> 
-                                    Tu ticket ha sido rechazado por el motivo de:  <br/>
-                                    Contenido prohibido
+                                    Tu ticket ha sido finalizado inmediatamente por el motivo de:  <br/>
+                                    Contenido inadecuado
 
                                  </span>
                               </font>
