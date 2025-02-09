@@ -37,7 +37,7 @@ router.post('/tags_jobs', async (req, res) => {
 
             return res.status(404).json({ error: 'Documento no encontrado' });
         }
-
+        const title= doc.data().title;
         const descripcion = doc.data().description;
 
         // Inicializar la API de Google Generative AI
@@ -45,7 +45,7 @@ router.post('/tags_jobs', async (req, res) => {
         const model = await genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         // Definir el prompt para la IA
-        const prompt = `Dada la descripción: "${descripcion}", y la lista de etiquetas: [${subcategorias.join(', ')}], selecciona solo las etiquetas que tengan una relación lógica y directa con la descripción proporcionada. 
+        const prompt = `Dado el siguiente titulo "${title}", y descripción: "${descripcion}", y la lista de etiquetas: [${subcategorias.join(', ')}], selecciona solo las etiquetas que tengan una relación lógica y directa con la descripción proporcionada. 
 
 Si la descripción contiene referencias a trabajos NSFW, brujería, sicariato, o cualquier tema ilegal o inapropiado, responde únicamente con "Contenido inadecuado". 
 
