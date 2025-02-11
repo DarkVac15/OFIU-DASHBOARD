@@ -39,7 +39,7 @@
     <script>
         document.getElementById("generatePDF").addEventListener("click", async function () {
             document.getElementById("loading-spinner").classList.remove("d-none");
-            const pdfUrl = button.getAttribute("data-url");
+            const pdfUrl = this.getAttribute("data-url");
             const errorAlert = document.getElementById("pdfError");
             try {
                 // Hace la petición al servidor
