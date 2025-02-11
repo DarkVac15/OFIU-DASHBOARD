@@ -86,7 +86,7 @@ Si ninguna etiqueta es relevante, responde con "Sin etiqueta".`;
             });      
             res.status(200).json("ok");   
         }
-       ;
+       
     } catch (error) {
 
         res.status(500).json({ error: "Error interno del servidor", details: error.message });
