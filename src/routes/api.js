@@ -10,7 +10,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 router.post('/tags_jobs', async (req, res) => {
     const docId = req.body.id;
     
-    const docIdCliente = req.body.idClient;
+   // const docIdCliente = req.body.idClient;
 
 
     if (!docId) {
@@ -39,7 +39,7 @@ router.post('/tags_jobs', async (req, res) => {
         }
         const title= doc.data().title;
         const descripcion = doc.data().description;
-
+        const  docIdCliente=doc.data().idClient;
         // Inicializar la API de Google Generative AI
         const genAI = new GoogleGenerativeAI(process.env.API_KEY);
         const model = await genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -71,20 +71,22 @@ Si ninguna etiqueta es relevante, responde con "Sin etiqueta".`;
                 state: "Finalizado",
                 tags: etiquetasSugeridas
             });
+
             const doc = await db.collection('users').doc(docIdCliente).get();
          
             const name = doc.data().name;
             const email= doc.data().email;
 
             await mailController.notificarTicket(req, res,{name,email});
-
+            res.status(200).json("correo enviado");
 
         } else {
             await db.collection('tickets').doc(docId).update({
                 tags: etiquetasSugeridas
-            });         
+            });      
+            res.status(200).json("ok");   
         }
-        res.status(200).json("ok");
+       ;
     } catch (error) {
 
         res.status(500).json({ error: "Error interno del servidor", details: error.message });
