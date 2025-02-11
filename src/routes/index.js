@@ -1,57 +1,54 @@
 const express = require('express');
 const router = express.Router();
-const { db, auth } = require("../config/firebase");
-//import jwt from 'jsonwebtoken';
-
 const mailController = require('../controller/mailController');
 
-router.get('/administracion',  (req, res) =>{
-  
+
+router.get('/administracion', (req, res) => {
   const message = req.query.message || null;
-    res.render('login_admin',{
-      errorMessage: message 
-    });
+  res.render('login_admin', {
+    errorMessage: message
+  });
 });
 
-
-   
 router.get('/', (req, res) => {
-  
-const message = req.query.message || null;
-  res.render('landingcopy', { layout: 'main_page',
+  const message = req.query.message || null;
+  res.render('landingcopy', {
+    layout: 'main_page',
     isPolitica: false,
     isHome: true,
     isTerminos: false,
-    errorMessage: message 
+    errorMessage: message
 
-    }); // Envía el mensaje a la vista
+  }); // Envía el mensaje a la vista
 });
- 
+
 router.get('/PoliticadePrivacidad', async (req, res) => {
-    const message = req.query.message || null;
-  res.render('politic', { errorMessage: message, layout: 'main_page',
+  const message = req.query.message || null;
+  res.render('politic', {
+    errorMessage: message, layout: 'main_page',
     isPolitica: true,
     isHome: false,
     isTerminos: false
-   })
+  })
 });
 router.get('/TerminosyCondicionesdeUso', async (req, res) => {
   const message = req.query.message || null;
-  res.render('terms', { errorMessage: message, layout: 'main_page',
+  res.render('terms', {
+    errorMessage: message, layout: 'main_page',
     isPolitica: false,
     isHome: false,
     isTerminos: true
-   })
+  })
 });
 
 router.get('/reports', async (req, res) => {
   const message = req.query.message || null;
-  res.render('reports', { 
+  res.render('reports', {
     errorMessage: message,
     layout: 'main_page',
     isPolitica: false,
     isHome: false,
-    isTerminos: false,  
+    isTerminos: false,
   })
 });
 
@@ -60,36 +57,29 @@ router.post("/reports/submit", mailController.sendReport);
 router.get('/support', async (req, res) => {
   const message = req.query.message || null;
   res.render('support', {
-     errorMessage: message,
-     layout: 'main_page',
-     isPolitica: false,
-     isHome: false,
-     isTerminos: false,
-     })
+    errorMessage: message,
+    layout: 'main_page',
+    isPolitica: false,
+    isHome: false,
+    isTerminos: false,
+  })
 });
 
-
-
 router.post("/support/submit", mailController.sendSupport);
-
-
-
 
 router.post("/unsubscribe/submit", mailController.sendUnsubscribe);
 
 router.get('/unsubscribe', async (req, res) => {
   const message = req.query.message || null;
-  res.render('unsubscribe', { 
+  res.render('unsubscribe', {
     errorMessage: message,
     layout: 'main_page',
     isPolitica: false,
     isHome: false,
     isTerminos: false,
 
-   })
+  })
 });
-
-
 
 router.post('/setToken', (req, res) => {
   const { token } = req.body;
@@ -104,8 +94,6 @@ router.post('/setToken', (req, res) => {
 
   res.sendStatus(200); // Responde con éxito
 });
-
-
 
 router.post('/logout', (req, res) => {
   // Elimina la cookie del token
@@ -131,5 +119,4 @@ router.get('/set-admin', async (req, res) => {
     res.status(500).json({ message: 'Error al asignar rol de admin' });
   }
 });*/
-
 module.exports = router;

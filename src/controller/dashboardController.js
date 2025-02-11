@@ -2,22 +2,13 @@ const { db, auth } = require("../config/firebase");
 const puppeteer = require('puppeteer-core');//revisar en locl
 const moment = require('moment-timezone');
 
-let userArray = [];
-let profArray = [];
-let userHArray = [];
-let ticketArray = [];
+let userArray = [], profArray = [], userHArray = [], ticketArray = [];
 let startDate = moment().tz('America/Bogota').format('YYYY-MM-DD HH:mm:ss');
 let endDate = moment().tz('America/Bogota').format('YYYY-MM-DD HH:mm:ss');;  // Hasta el final del día
 const fechaActual = moment().tz('America/Bogota').format('YYYY-MM-DD HH:mm:ss');
-let filteredStateCount = null;
-let filteredCityCount = null;
-let userTrendLabels, userTrendData = null;
-let professionalTrendLabels, professionalTrendData = null;
-let ticketTrendLabels = null;
-let ticketTrendData = null;
-let filteredLocationCount = {};
-let subcategoryCount = {};
-let categoryCount = {};
+
+let filteredStateCount = null, filteredCityCount = null, userTrendLabels, userTrendData = null, professionalTrendLabels, professionalTrendData = null, ticketTrendLabels = null, ticketTrendData = null;
+let filteredLocationCount = {}, subcategoryCount = {}, categoryCount = {};
 let totalUsers, totalProfessionals, totalTickets, totalDisabledUsers;
 let filteredCategoryCount = null;
 
